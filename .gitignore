@@ -1,0 +1,9 @@
+s
+.ipynb_checkpoints/tests-checkpoint.ipynb
+utils/__pycache__/__init__.cpython-310.pyc
+utils/__pycache__/AccessController.cpython-310.pyc
+utils/__pycache__/AutoProperty.cpython-310.pyc
+utils/__pycache__/Exceptions.cpython-310.pyc
+utils/__pycache__/FieldValidator.cpython-310.pyc
+utils/__pycache__/IAutoPropertyMethod.cpython-310.pyc
+utils/__pycache__/PropSettings.cpython-310.pyc
