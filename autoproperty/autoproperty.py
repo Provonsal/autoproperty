@@ -55,7 +55,7 @@ class AutoProperty:
         tmp1: AutopropGetter = AutopropGetter(varname, self.g_access_mod)
         tmp2: AutopropSetter = AutopropSetter(varname, self.s_access_mod)
 
-        self.getter: AutopropGetter = wraps(tmp1)(PropMethodAccessController(self.s_access_mod)(tmp1)) # type: ignore
-        self.setter: AutopropSetter = wraps(tmp2)(PropMethodAccessController(self.g_access_mod)(FieldValidator(varname, self._annotationType)(tmp2))) # type: ignore
+        self.getter: AutopropGetter = wraps(tmp1)(PropMethodAccessController(self.g_access_mod)(tmp1)) # type: ignore
+        self.setter: AutopropSetter = wraps(tmp2)(PropMethodAccessController(self.s_access_mod)(FieldValidator(varname, self._annotationType)(tmp2))) # type: ignore
 
         return property(self.getter, self.setter, doc=self._get_docstring(func, self._annotationType))
