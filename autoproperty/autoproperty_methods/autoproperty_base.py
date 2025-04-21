@@ -1,7 +1,7 @@
-from utils.prop_settings import AutoPropAccessMod
+from autoproperty.prop_settings import AutoPropAccessMod
 
 
-class AutoPropertyMethodBase:
+class AutopropBase:
 
     __auto_prop__: bool
     __prop_attr_name__: str

@@ -1,1 +1,0 @@
-from .autoproperty_getter import

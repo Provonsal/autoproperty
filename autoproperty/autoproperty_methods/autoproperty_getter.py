@@ -1,12 +1,13 @@
 from warnings import warn
 
-from utils.autoproperty_methods.autoproperty_base import AutoPropertyMethodBase
-from utils.prop_settings import AutoPropAccessMod
+from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
+from autoproperty.prop_settings import AutoPropAccessMod
 
 
-class AutoPropGetterMethod(AutoPropertyMethodBase):
+class AutopropGetter(AutopropBase):
 
     def __init__(self, varname: str, g_access_mod) -> None:
+        super().__init__()
         self.varname = varname
         self.g_access_mod = g_access_mod
 
@@ -21,7 +22,4 @@ class AutoPropGetterMethod(AutoPropertyMethodBase):
         try:
             return getattr(clsinst, self.varname)
         except:
-            warn(
-                "Property wasnt properly initialized. The property has default meaning (None)")
-            setattr(clsinst, self.varname, None)
-            return getattr(clsinst, self.varname)
+            return None

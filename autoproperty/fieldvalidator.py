@@ -2,6 +2,9 @@ from functools import wraps
 from types import NoneType, UnionType
 from typing import Any, Callable, Iterable, Mapping
 
+from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
+from autoproperty.interfaces.autoproperty_methods.autoproperty_base import IAutopropBase
+
 
 class FieldValidator:
     def __init__(
@@ -15,7 +18,7 @@ class FieldValidator:
         if isinstance(annotationType, (NoneType, UnionType, type)):
             self._annotationType = annotationType
         else:
-            raise Exception()
+            raise TypeError("Annotation type is invalid")
         
     def _create_annotations(self, cls) -> bool:
         
@@ -36,7 +39,7 @@ class FieldValidator:
             cls.__annotations__[self._fieldName] = annotation
             
         except AttributeError:
-            raise Exception("Annotations not found")    
+            raise AttributeError("Annotations not found", name="class_annotations", obj=class_annotations)
         except AssertionError:
             raise Exception("Annotation overload")
         except KeyError:
@@ -48,7 +51,7 @@ class FieldValidator:
             annotations: Mapping[str, type] = getattr(cls, "__annotations__")
             assert annotations.get(self._fieldName) is not None
             return annotations[self._fieldName]
-        except:
+        except AssertionError:
             return self._get_param_annotation(func)
     
     def _get_param_annotation(self, func: Callable) -> type | UnionType:
@@ -78,16 +81,19 @@ class FieldValidator:
         
         if attr_type is not None:
             for arg in args:
-                assert isinstance(arg, attr_type), f"Wrong field type. Type should be {attr_type}, but got {type(arg)} instead"
+                if not isinstance(arg, attr_type):
+                    raise TypeError(f"Wrong field type. Type should be {attr_type}, but got {type(arg)} instead")
                 
             for value in kwargs.values():
-                assert isinstance(value, attr_type), f"Wrong field type. Type should be {attr_type}, but got {type(value)} instead"
+                if not isinstance(value, attr_type):
+                    raise TypeError(f"Wrong field type. Type should be {attr_type}, but got {type(value)} instead")
         else:
-            raise Exception("Type is none")
+            raise ValueError("Type is none")
     
     def __call__(self, func: Callable):
         
-        @wraps(func)
+        
+        @wraps(AutopropBase) 
         def wrapper(cls, *args, **kwargs):
             
             self._create_annotations(cls)

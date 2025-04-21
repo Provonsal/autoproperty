@@ -1,10 +1,12 @@
 from functools import wraps
 from types import UnionType
-from typing import Callable, Protocol
+from typing import Callable
 from warnings import warn
-from utils.fieldvalidator import FieldValidator
-from utils.accesscontroller import PropertyMethodAccessController
-from utils.prop_settings import AutoPropAccessMod
+from autoproperty.fieldvalidator import FieldValidator
+from autoproperty.accesscontroller import PropMethodAccessController
+from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutopropSetter
+from autoproperty.autoproperty_methods import AutopropGetter, AutopropSetter
+from autoproperty.prop_settings import AutoPropAccessMod
 
 
 class AutoProperty:
@@ -47,9 +49,13 @@ class AutoProperty:
                 return f"Auto property. Name: {func.__name__}, type: {attr_type}, returns: {func.__annotations__.get('return')}"
 
     def __call__(self, func: Callable):
+        
         varname = "__" + func.__name__[0].lower() + func.__name__[1:]
 
-        self.getter: AutoPropGetter = PropertyMethodAccessController(self.s_access_mod)(AutoPropGetter(varname, self.g_access_mod))
-        self.setter: AutoPropSetter = PropertyMethodAccessController(self.g_access_mod)(FieldValidator(varname, self._annotationType)(AutoPropSetter(varname, self.s_access_mod)))
+        tmp1: AutopropGetter = AutopropGetter(varname, self.g_access_mod)
+        tmp2: AutopropSetter = AutopropSetter(varname, self.s_access_mod)
+
+        self.getter: AutopropGetter = wraps(tmp1)(PropMethodAccessController(self.s_access_mod)(tmp1)) # type: ignore
+        self.setter: AutopropSetter = wraps(tmp2)(PropMethodAccessController(self.g_access_mod)(FieldValidator(varname, self._annotationType)(tmp2))) # type: ignore
 
         return property(self.getter, self.setter, doc=self._get_docstring(func, self._annotationType))

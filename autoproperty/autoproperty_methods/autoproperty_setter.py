@@ -1,11 +1,12 @@
 
-from utils.autoproperty_methods.autoproperty_base import AutoPropertyMethodBase
-from utils.prop_settings import AutoPropAccessMod
+from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
+from autoproperty.prop_settings import AutoPropAccessMod
 
 
-class AutoPropSetterMethod(AutoPropertyMethodBase):
+class AutopropSetter(AutopropBase):
 
     def __init__(self, varname: str, s_access_mod):
+        super().__init__()
         self.varname = varname
         self.s_access_mod = s_access_mod
 

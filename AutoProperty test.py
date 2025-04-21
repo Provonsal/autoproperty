@@ -1,5 +1,5 @@
-from utils import AutoProperty
-from utils.prop_settings import AutoPropAccessMod
+from autoproperty import AutoProperty
+from autoproperty.prop_settings import AutoPropAccessMod
 
 
 class MyClass:
@@ -11,7 +11,7 @@ class MyClass:
         self.X = 100
         print("Внутри родного класса. Автосвойство X после изменения: ", self.X)
 
-    @AutoProperty(int, AutoPropAccessMod.Protected)
+    @AutoProperty(int, access_mod=AutoPropAccessMod.Public, g_access_mod = AutoPropAccessMod.Public, s_access_mod=AutoPropAccessMod.Private)
     def X(self, lol: int = 10) -> None: ...
 
     @property
@@ -24,9 +24,9 @@ class MyClass:
 class MyClass2(MyClass):
     def __init__(self):
 
-        print("Внутри потомка класса. Автосвойство X до изменения: ", self.X)
-        self.X = 12
+        # print("Внутри потомка класса. Автосвойство X до изменения: ", self.X)
         print("Внутри потомка класса. Автосвойство X после изменения: ", self.X)
+        self.X = 12
 
 
 def test1():

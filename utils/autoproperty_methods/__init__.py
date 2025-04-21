@@ -1,2 +1,0 @@
-from .autoproperty_setter import AutoPropSetterMethod
-from .autoproperty_getter import AutoPropGetterMethod

@@ -2,12 +2,13 @@ from functools import wraps
 import inspect
 from typing import Callable
 
-from utils.interfaces.autoproperty_methods import IAutoPropertyMethod
-from utils.prop_settings import AutoPropAccessMod
-from utils.exceptions.Exceptions import UnaccessibleProperty
+from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
+from autoproperty.interfaces.autoproperty_methods import IAutopropBase
+from autoproperty.prop_settings import AutoPropAccessMod
+from autoproperty.exceptions.Exceptions import UnaccessibleProperty
 
 
-class PropertyMethodAccessController:
+class PropMethodAccessController:
     
     def __init__(self, access: AutoPropAccessMod):
         self.access: AutoPropAccessMod = access
@@ -44,6 +45,7 @@ class PropertyMethodAccessController:
     def __call__(self, obj: Callable):
         
         
+        @wraps(AutopropBase)
         def  wrapper(cls, *args, **kwargs):
             
             frame = inspect.currentframe()
@@ -52,13 +54,13 @@ class PropertyMethodAccessController:
                 
                 locals = frame.f_back.f_locals
                 
-                class_caller: "IAutoPropertyMethod" = locals.get("self", None)
+                class_caller = locals.get("self", None)
                 
                 match self.access:
                     
                     case AutoPropAccessMod.Private:
                         
-                        cls_with_private_method = PropertyMethodAccessController.contain_autoprop_method(class_caller.__class__.__bases__, obj)
+                        cls_with_private_method = PropMethodAccessController.contain_autoprop_method(class_caller.__class__.__bases__, obj)
                         
                         if class_caller is cls and not cls_with_private_method:
                             return obj(cls, *args, **kwargs) if isinstance(obj, Callable) else obj
