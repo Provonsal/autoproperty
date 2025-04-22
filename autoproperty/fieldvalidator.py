@@ -4,7 +4,6 @@ from typing import Any, Callable, Iterable, Mapping
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
 from autoproperty.exceptions.Exceptions import AnnotationNotFound
-from autoproperty.interfaces.autoproperty_methods.autoproperty_base import IAutopropBase
 
 
 class FieldValidator:

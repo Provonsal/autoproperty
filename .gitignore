@@ -1,4 +1,3 @@
-s
 .ipynb_checkpoints/tests-checkpoint.ipynb
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,visualstudio,python,dotenv
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,visualstudio,python,dotenv
@@ -590,3 +589,4 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,visualstudio,python,dotenv
+test.py

@@ -3,7 +3,6 @@ import inspect
 from typing import Callable
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
-from autoproperty.interfaces.autoproperty_methods import IAutopropBase
 from autoproperty.prop_settings import AutoPropAccessMod
 from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod, AccessModNotRecognized
 

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "autoproperty"
+version = "0.0.1"
+authors = [
+ { name="Provonsal", email="alecsw86@gmail.com" },
+]
+description = "Library for making automatic property for methods with type validation and access modificators."
+readme = "README.md"
+requires-python = ">=3.10.0"
+classifiers = [
+   "Programming Language :: Python :: 3",
+   "License :: OSI Approved :: MIT License",
+   "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/Provonsal/tests"
+Issues = ""
