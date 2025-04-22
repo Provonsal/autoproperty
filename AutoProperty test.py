@@ -11,7 +11,7 @@ class MyClass:
         self.X = 100
         print("Внутри родного класса. Автосвойство X после изменения: ", self.X)
 
-    @AutoProperty(int, access_mod=AutoPropAccessMod.Public, g_access_mod = AutoPropAccessMod.Public, s_access_mod=AutoPropAccessMod.Private)
+    @AutoProperty(int, "public")
     def X(self, lol: int = 10) -> None: ...
 
     @property
@@ -35,6 +35,7 @@ def test1():
     print("Снаружи классов. Автосвойство X до изменения: ", g.X)
     g.X = 12
     print("Снаружи классов. Автосвойство X после изменения: ", g.X)
+    print(AutoPropAccessMod(0))
 
 
 test1()

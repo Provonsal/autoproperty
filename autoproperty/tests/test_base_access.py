@@ -1,5 +1,5 @@
 from autoproperty import AutoProperty
-from autoproperty.exceptions.Exceptions import UnaccessibleProperty
+from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod
 from autoproperty.prop_settings import AutoPropAccessMod
 
 
@@ -28,21 +28,21 @@ def test_private_access():
     try:
         CL1()
         assert True    
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert False
     
     # inside the inheritor        
     try:
         CL2()
         assert False
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert True
         
     # in unknown class
     try:
         cls = CL3()
         assert False
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert True
     
     # outside the class    
@@ -51,7 +51,7 @@ def test_private_access():
         cls.X = 100
         print(cls.X)
         assert False
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert True
         
 def test_protected_access():
@@ -79,21 +79,21 @@ def test_protected_access():
     try:
         CL1()
         assert True    
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert False
     
     # inside the inheritor        
     try:
         CL2()
         assert True
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert False
         
     # in unknown class
     try:
         cls = CL3()
         assert False
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert True
     
     # outside the class    
@@ -102,7 +102,7 @@ def test_protected_access():
         cls.X = 100
         print(cls.X)
         assert False
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert True
         
 def test_public_access():
@@ -130,21 +130,21 @@ def test_public_access():
     try:
         CL1()
         assert True    
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert False
     
     # inside the inheritor        
     try:
         CL2()
         assert True
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert False
         
     # in unknown class
     try:
         cls = CL3()
         assert True
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert True
     
     # outside the class    
@@ -153,6 +153,6 @@ def test_public_access():
         cls.X = 100
         print(cls.X)
         assert True
-    except UnaccessibleProperty:
+    except UnaccessiblePropertyMethod:
         assert True
         

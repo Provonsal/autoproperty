@@ -3,6 +3,7 @@ from types import NoneType, UnionType
 from typing import Any, Callable, Iterable, Mapping
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
+from autoproperty.exceptions.Exceptions import AnnotationNotFound
 from autoproperty.interfaces.autoproperty_methods.autoproperty_base import IAutopropBase
 
 
@@ -65,17 +66,14 @@ class FieldValidator:
     
     def _get_func_annotation(self, func: Callable):
         # если не найдено то смотрим в аннотациях метода
-        try:
-            # Пытаемся взять все существующие аннотации параметров функции
-            annotations: dict[str, type | UnionType] = getattr(func, "__annotations__")
-            
-            assert len(annotations) > 0
-            assert annotations.get(self._fieldName) is not None
-            
-            return annotations[self._fieldName]
+        # Пытаемся взять все существующие аннотации параметров функции
+        annotations: dict[str, type | UnionType] = getattr(func, "__annotations__")
         
-        except AssertionError:
-            raise Exception("No annotation detected")
+        if len(annotations) > 0 and annotations.get(self._fieldName) is not None:
+            return annotations[self._fieldName]
+        else:
+            raise AnnotationNotFound("No annotation detected")
+           
     
     def _check_args(self, args: Iterable, kwargs: Mapping[str, Any], attr_type: type | UnionType):
         
@@ -90,10 +88,9 @@ class FieldValidator:
         else:
             raise ValueError("Type is none")
     
-    def __call__(self, func: Callable):
+    def __call__(self, func: AutopropBase):
         
-        
-        @wraps(AutopropBase) 
+        @wraps(func) 
         def wrapper(cls, *args, **kwargs):
             
             self._create_annotations(cls)
@@ -106,4 +103,5 @@ class FieldValidator:
             self._check_args(args, kwargs, attr_annotation)
             
             return func(cls, *args)
+        
         return wrapper

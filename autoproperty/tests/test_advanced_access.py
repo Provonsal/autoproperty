@@ -1,5 +1,5 @@
 from autoproperty import AutoProperty
-from autoproperty.exceptions.Exceptions import UnaccessibleProperty
+from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod
 from autoproperty.prop_settings import AutoPropAccessMod
 
 
@@ -27,7 +27,7 @@ def test_private_public_access():
             try:
                 self.X = 10
                 assert True
-            except UnaccessibleProperty:
+            except UnaccessiblePropertyMethod:
                 assert False
 
             try:
@@ -102,7 +102,7 @@ def test_private_protected_access():
             try:
                 self.X = 10
                 assert True
-            except UnaccessibleProperty:
+            except UnaccessiblePropertyMethod:
                 assert False
 
             try:
@@ -176,7 +176,7 @@ def test_public_private_access():
             try:
                 self.X = 10
                 assert False
-            except UnaccessibleProperty:
+            except UnaccessiblePropertyMethod:
                 assert True
 
             try:
@@ -250,7 +250,7 @@ def test_public_protected_access():
             try:
                 self.X = 10
                 assert True
-            except UnaccessibleProperty:
+            except UnaccessiblePropertyMethod:
                 assert False
 
             try:
@@ -324,7 +324,7 @@ def test_protected_private_access():
             try:
                 self.X = 10
                 assert False
-            except UnaccessibleProperty:
+            except UnaccessiblePropertyMethod:
                 assert True
 
             try:
@@ -399,7 +399,7 @@ def test_protected_public_access():
             try:
                 self.X = 10
                 assert True
-            except UnaccessibleProperty:
+            except UnaccessiblePropertyMethod:
                 assert False
 
             try:

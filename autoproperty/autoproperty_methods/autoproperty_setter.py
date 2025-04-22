@@ -1,20 +1,20 @@
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
-from autoproperty.prop_settings import AutoPropAccessMod
+from autoproperty.prop_settings import AutoPropAccessMod, AutoPropType
 
 
 class AutopropSetter(AutopropBase):
 
-    def __init__(self, varname: str, s_access_mod):
+    def __init__(self, prop_name, varname: str, s_access_mod):
         super().__init__()
         self.varname = varname
         self.s_access_mod = s_access_mod
 
         self.__auto_prop__ = True
+        self.__prop_name__ = prop_name
         self.__prop_attr_name__ = varname
         self.__prop_access__ = s_access_mod
-        self.__belongs__ = None
+        self.__method_type__ = AutoPropType.Setter
 
     def __call__(self, clsinst, value):
-        self.__belongs__ = clsinst
         setattr(clsinst, self.varname, value)

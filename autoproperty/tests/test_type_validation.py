@@ -1,5 +1,5 @@
 from autoproperty import AutoProperty
-from autoproperty.exceptions.Exceptions import UnaccessibleProperty
+from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod
 from autoproperty.prop_settings import AutoPropAccessMod
 
 def test_wrong_type():
