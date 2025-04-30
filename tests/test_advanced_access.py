@@ -19,7 +19,7 @@ def test_private_public_access():
             except:
                 assert False
 
-        @AutoProperty(int, access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Private, s_access_mod=AutoPropAccessMod.Public)
+        @AutoProperty[int](access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Private, s_access_mod=AutoPropAccessMod.Public)
         def X(self): ...
 
     class CL2(CL1):
@@ -94,7 +94,7 @@ def test_private_protected_access():
             except:
                 assert False
 
-        @AutoProperty(int, access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Private, s_access_mod=AutoPropAccessMod.Protected)
+        @AutoProperty[int](access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Private, s_access_mod=AutoPropAccessMod.Protected)
         def X(self): ...
 
     class CL2(CL1):
@@ -168,7 +168,7 @@ def test_public_private_access():
             except:
                 assert False
 
-        @AutoProperty(int, access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Public, s_access_mod=AutoPropAccessMod.Private)
+        @AutoProperty[int](access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Public, s_access_mod=AutoPropAccessMod.Private)
         def X(self): ...
 
     class CL2(CL1):
@@ -242,7 +242,7 @@ def test_public_protected_access():
             except:
                 assert False
 
-        @AutoProperty(int, access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Public, s_access_mod=AutoPropAccessMod.Protected)
+        @AutoProperty[int](access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Public, s_access_mod=AutoPropAccessMod.Protected)
         def X(self): ...
 
     class CL2(CL1):
@@ -316,7 +316,7 @@ def test_protected_private_access():
             except:
                 assert False
 
-        @AutoProperty(int, access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Protected, s_access_mod=AutoPropAccessMod.Private)
+        @AutoProperty[int](access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Protected, s_access_mod=AutoPropAccessMod.Private)
         def X(self): ...
 
     class CL2(CL1):
@@ -391,7 +391,7 @@ def test_protected_public_access():
             except:
                 assert False
 
-        @AutoProperty(int, access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Protected, s_access_mod=AutoPropAccessMod.Public)
+        @AutoProperty[int](access_mod=AutoPropAccessMod.Public, g_access_mod=AutoPropAccessMod.Protected, s_access_mod=AutoPropAccessMod.Public)
         def X(self): ...
 
     class CL2(CL1):

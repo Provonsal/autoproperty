@@ -1,6 +1,6 @@
 from functools import wraps
 from types import NoneType, UnionType
-from typing import Any, Callable, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping, Type, TypeVar
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
 from autoproperty.exceptions.Exceptions import AnnotationNotFound
@@ -10,7 +10,7 @@ class FieldValidator:
     def __init__(
         self, 
         fieldName: str, 
-        annotationType: type | UnionType | None = None
+        annotationType: NoneType | UnionType | type | None = None
     ) -> None:
         
         self._fieldName: str = fieldName if isinstance(fieldName, Iterable) else (fieldName)

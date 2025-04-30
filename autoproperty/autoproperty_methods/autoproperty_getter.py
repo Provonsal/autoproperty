@@ -1,12 +1,14 @@
-from warnings import warn
 
+from typing import Any, Generic, TypeVar
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
-from autoproperty.prop_settings import AutoPropAccessMod, AutoPropType
+from autoproperty.prop_settings import AutoPropType
 
 
-class AutopropGetter(AutopropBase):
+T = TypeVar('T')
 
-    def __init__(self, prop_name: str,  varname: str, g_access_mod) -> None:
+class AutopropGetter(Generic[T],AutopropBase):
+
+    def __init__(self, prop_name: str,  varname: str, g_access_mod):
         super().__init__()
         self.varname = varname
         self.g_access_mod = g_access_mod
@@ -17,9 +19,5 @@ class AutopropGetter(AutopropBase):
         self.__prop_access__ = g_access_mod
         self.__method_type__ = AutoPropType.Getter
 
-    def __call__(self, clsinst: object) -> None:
-        
-        try:
-            return getattr(clsinst, self.varname)
-        except:
-            return None
+    def __call__(self, clsinst) -> T|None:
+        return getattr(clsinst, self.varname, None)

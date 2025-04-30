@@ -1,13 +1,13 @@
 from functools import wraps
 import inspect
-from typing import Callable
+from typing import Callable, Generic, TypeVar
 
-from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
 from autoproperty.prop_settings import AutoPropAccessMod
 from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod, AccessModNotRecognized
 
+T = TypeVar('T')
 
-class PropMethodAccessController:
+class PropMethodAccessController(Generic[T]):
 
     def __init__(self, access: AutoPropAccessMod):
         self.access: AutoPropAccessMod = access
@@ -41,16 +41,23 @@ class PropMethodAccessController:
 
         return None
 
-    def __call__(self, obj: AutopropBase):
-
+    def __call__(self, obj) -> Callable[..., T]:
+        
         @wraps(obj)
-        def wrapper(cls, *args, **kwargs):
+        def wrapper(cls, *args, **kwargs) -> T:
 
             frame = inspect.currentframe()
 
             try:
 
-                locals = frame.f_back.f_locals
+                if frame is None:
+                    raise Exception("Something unexpected happened! :(")
+                if frame.f_back is None:
+                    raise Exception("Something unexpected happened! :(")
+                if frame.f_back.f_back is None:
+                    raise Exception("Something unexpected happened! :(")
+                
+                locals = frame.f_back.f_back.f_locals
 
                 class_caller = locals.get("self", None)
 
@@ -62,18 +69,18 @@ class PropMethodAccessController:
                             class_caller.__class__.__bases__, obj)
 
                         if class_caller is cls and not cls_with_private_method:
-                            return obj(cls, *args, **kwargs) if isinstance(obj, Callable) else obj
+                            return obj(cls, *args, **kwargs)
                         else:
                             raise UnaccessiblePropertyMethod(obj)
 
                     case AutoPropAccessMod.Public:
 
-                        return obj(cls, *args, **kwargs) if isinstance(obj, Callable) else obj
+                        return obj(cls, *args, **kwargs)
 
                     case AutoPropAccessMod.Protected:
 
                         if class_caller is cls or isinstance(class_caller, cls.__class__):
-                            return obj(cls, *args, **kwargs) if isinstance(obj, Callable) else obj
+                            return obj(cls, *args, **kwargs)
                         else:
                             raise UnaccessiblePropertyMethod(obj)
                     case _:
