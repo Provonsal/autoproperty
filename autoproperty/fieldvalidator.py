@@ -4,6 +4,7 @@ from typing import Any, Callable, Iterable, Mapping, Type, TypeVar
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
 from autoproperty.exceptions.Exceptions import AnnotationNotFound
+from autoproperty.interfaces.autoproperty_methods import IAutopropSetter
 
 
 class FieldValidator:
@@ -56,6 +57,9 @@ class FieldValidator:
     
     def _get_param_annotation(self, func: Callable) -> type | UnionType:
         try:
+            
+            
+            
             # В первую очередь смотрим на переданные аннотации в параметрах декоратора
             assert self._annotationType is not None
             return self._annotationType
@@ -64,6 +68,13 @@ class FieldValidator:
             return self._get_func_annotation(func)
     
     def _get_func_annotation(self, func: Callable):
+        
+        if isinstance(func, IAutopropSetter):
+            if func.__value_type__ is not None:
+                return func.__value_type__
+            else:
+                raise AnnotationNotFound("No annotation detected")
+        
         # если не найдено то смотрим в аннотациях метода
         # Пытаемся взять все существующие аннотации параметров функции
         annotations: dict[str, type | UnionType] = getattr(func, "__annotations__")

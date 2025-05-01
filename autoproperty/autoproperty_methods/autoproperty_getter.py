@@ -6,7 +6,7 @@ from autoproperty.prop_settings import AutoPropType
 
 T = TypeVar('T')
 
-class AutopropGetter(Generic[T],AutopropBase):
+class AutopropGetter(Generic[T], AutopropBase):
 
     def __init__(self, prop_name: str,  varname: str, g_access_mod):
         super().__init__()

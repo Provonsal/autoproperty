@@ -29,13 +29,13 @@ class PropMethodAccessController(Generic[T]):
                     if val.getter is not None:
 
                         if hasattr(val.getter, "__auto_prop__"):
-                            if getattr(val.getter, "__name__") in Prop_method.__name__:
+                            if getattr(val.getter, "__prop_name__") in getattr(Prop_method, "__prop_name__"):
                                 return class_
 
                     if val.setter is not None:
 
                         if hasattr(val.setter, "__auto_prop__"):
-                            if getattr(val.setter, "__name__") in Prop_method.__name__:
+                            if getattr(val.setter, "__prop_name__") in getattr(Prop_method, "__prop_name__"):
                                 return class_
                 else:
                     continue
