@@ -10,7 +10,7 @@ def test_private_access():
             self.X = 10
             print(self.X)
             
-        @AutoProperty(int, AutoPropAccessMod.Private)
+        @AutoProperty[int](annotationType=int, access_mod=AutoPropAccessMod.Private)
         def X(self): ...
 
     class CL2(CL1):
@@ -61,7 +61,7 @@ def test_protected_access():
             self.X = 10
             print(self.X)
             
-        @AutoProperty(int, AutoPropAccessMod.Protected)
+        @AutoProperty[int](annotationType=int, access_mod=AutoPropAccessMod.Protected)
         def X(self): ...
 
     class CL2(CL1):
@@ -112,7 +112,7 @@ def test_public_access():
             self.X = 10
             print(self.X)
             
-        @AutoProperty(int, AutoPropAccessMod.Public)
+        @AutoProperty[int](annotationType=int, access_mod=AutoPropAccessMod.Public)
         def X(self): ...
 
     class CL2(CL1):

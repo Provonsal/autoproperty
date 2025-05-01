@@ -2,6 +2,7 @@ from functools import wraps
 import inspect
 from typing import Callable, Generic, TypeVar
 
+from autoproperty.interfaces.autoproperty_itself.I_autoproperty import IAutoProperty
 from autoproperty.prop_settings import AutoPropAccessMod
 from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod, AccessModNotRecognized
 
@@ -23,18 +24,18 @@ class PropMethodAccessController(Generic[T]):
             for key in dir(class_):
                 val = getattr(class_, key)
 
-                if isinstance(val, property):
+                if isinstance(val, IAutoProperty):
 
-                    if val.fget is not None:
+                    if val.getter is not None:
 
-                        if hasattr(val.fget, "__auto_prop__"):
-                            if getattr(val.fget, "__name__") in Prop_method.__name__:
+                        if hasattr(val.getter, "__auto_prop__"):
+                            if getattr(val.getter, "__name__") in Prop_method.__name__:
                                 return class_
 
-                    if val.fset is not None:
+                    if val.setter is not None:
 
-                        if hasattr(val.fset, "__auto_prop__"):
-                            if getattr(val.fset, "__name__") in Prop_method.__name__:
+                        if hasattr(val.setter, "__auto_prop__"):
+                            if getattr(val.setter, "__name__") in Prop_method.__name__:
                                 return class_
                 else:
                     continue
@@ -50,6 +51,7 @@ class PropMethodAccessController(Generic[T]):
 
             try:
 
+                # temp plugs
                 if frame is None:
                     raise Exception("Something unexpected happened! :(")
                 if frame.f_back is None:

@@ -8,7 +8,7 @@ def test_wrong_type():
             self.X = "12"
             print(self.X)
             
-        @AutoProperty(int, AutoPropAccessMod.Public)
+        @AutoProperty[int](annotationType=int, access_mod=AutoPropAccessMod.Public)
         def X(self): ...
 
     class CL2(CL1):

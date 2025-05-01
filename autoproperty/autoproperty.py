@@ -18,10 +18,13 @@ class AutoProperty(Generic[T]):
     g_access_mod: AutoPropAccessMod
     s_access_mod: AutoPropAccessMod
     docstr: str | None = None
+    setter: AutopropSetter
+    getter: AutopropGetter
 
     def __init__(
         self,
         func: Callable[..., Any] | None = None,
+        annotationType: type | UnionType | None = None,
         access_mod: AutoPropAccessMod | int | str = AutoPropAccessMod.Private,
         g_access_mod: AutoPropAccessMod | int | str | None = None,
         s_access_mod: AutoPropAccessMod | int | str | None = None,
@@ -29,7 +32,7 @@ class AutoProperty(Generic[T]):
     ):
 
         self.docstr = docstr
-
+        self.annotationType = annotationType
         if isinstance(access_mod, AutoPropAccessMod):
             self.access_mod = access_mod
         elif isinstance(access_mod, int):
@@ -76,8 +79,8 @@ class AutoProperty(Generic[T]):
             tmp1: AutopropGetter = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod)
             tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod)
 
-            self.getter = PropMethodAccessController[T](self.g_access_mod)(tmp1)
-            self.setter = PropMethodAccessController[NoneType](self.s_access_mod)(FieldValidator(self._varname, getattr(self, "__orig_class__").__args__[0])(tmp2))
+            self.getter = cast(AutopropGetter, PropMethodAccessController[T](self.g_access_mod)(tmp1))
+            self.setter = cast(AutopropSetter, PropMethodAccessController[NoneType](self.s_access_mod)(FieldValidator(self._varname, self.annotationType)))
 
     def __call__(
         self,
@@ -91,16 +94,19 @@ class AutoProperty(Generic[T]):
         tmp1: AutopropGetter[T] = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod)
         tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod)
 
-        self.getter = PropMethodAccessController[T](self.g_access_mod)(tmp1)
-        self.setter = PropMethodAccessController[NoneType](self.s_access_mod)(FieldValidator(self._varname, getattr(self, "__orig_class__").__args__[0])(tmp2))
+        self.getter = cast(AutopropGetter, PropMethodAccessController[T](self.g_access_mod)(tmp1))
+        self.setter = cast(AutopropSetter, PropMethodAccessController[NoneType](self.s_access_mod)(FieldValidator(self._varname, self.annotationType)(tmp2)))
         
         return self
 
+    
     def __set__(self, instance, obj):
         self.setter(instance, obj)
 
     def __get__(self, instance, owner=None) -> T:
-        return self.getter(instance)
+        if instance is None:
+            return self #type: ignore
+        return self.getter(instance) #type: ignore
 
     def __parse_access_str_int(self, access: str):
         match access:

@@ -9,7 +9,7 @@ def test_str_public_parse():
             self.X = 10
             print(self.X)
 
-        @AutoProperty(int, 'public')
+        @AutoProperty[int](annotationType=int, access_mod='public')
         def X(self): ...
 
     class CL2(CL1):
@@ -60,7 +60,7 @@ def test_str_protected_parse():
             self.X = 10
             print(self.X)
 
-        @AutoProperty(int, "protected")
+        @AutoProperty[int](annotationType=int, access_mod="protected")
         def X(self): ...
 
     class CL2(CL1):
@@ -112,7 +112,7 @@ def test_str_private_parse():
             self.X = 10
             print(self.X)
 
-        @AutoProperty(int, "private")
+        @AutoProperty[int](annotationType=int, access_mod="private")
         def X(self): ...
 
     class CL2(CL1):
@@ -163,7 +163,7 @@ def test_int_public_parse():
             self.X = 10
             print(self.X)
 
-        @AutoProperty(int, 0)
+        @AutoProperty[int](annotationType=int, access_mod=0)
         def X(self): ...
 
     class CL2(CL1):
@@ -214,7 +214,7 @@ def test_int_protected_parse():
             self.X = 10
             print(self.X)
 
-        @AutoProperty(int, 1)
+        @AutoProperty[int](annotationType=int, access_mod=1)
         def X(self): ...
 
     class CL2(CL1):
@@ -266,7 +266,7 @@ def test_int_private_parse():
             self.X = 10
             print(self.X)
 
-        @AutoProperty(int, 2)
+        @AutoProperty[int](annotationType=int, access_mod=2)
         def X(self): ...
 
     class CL2(CL1):
