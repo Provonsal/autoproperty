@@ -1,8 +1,9 @@
 from functools import wraps
 import inspect
+import traceback
 from typing import Callable, Generic, TypeVar
 
-from autoproperty.interfaces.autoproperty_itself.I_autoproperty import IAutoProperty
+from autoproperty.interfaces.autoproperty_methods import IAutoProperty, IAutopropBase
 from autoproperty.prop_settings import AutoPropAccessMod
 from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod, AccessModNotRecognized
 
@@ -42,7 +43,7 @@ class PropMethodAccessController(Generic[T]):
 
         return None
 
-    def __call__(self, obj) -> Callable[..., T]:
+    def __call__(self, obj: IAutopropBase) -> Callable[..., T]:
         
         @wraps(obj)
         def wrapper(cls, *args, **kwargs) -> T:
@@ -60,7 +61,7 @@ class PropMethodAccessController(Generic[T]):
                     raise Exception("Something unexpected happened! :(")
                 
                 locals = frame.f_back.f_back.f_locals
-
+                
                 class_caller = locals.get("self", None)
 
                 match self.access:
@@ -69,8 +70,11 @@ class PropMethodAccessController(Generic[T]):
 
                         cls_with_private_method = PropMethodAccessController.contain_autoprop_method(
                             class_caller.__class__.__bases__, obj)
+                        
+                        tmp = getattr(cls_with_private_method, "__qualname__", None)
+                        tmp2 = obj.__auto_prop__.bound_class_qualname
 
-                        if class_caller is cls and not cls_with_private_method:
+                        if class_caller is cls and cls_with_private_method is None:
                             return obj(cls, *args, **kwargs)
                         else:
                             raise UnaccessiblePropertyMethod(obj)

@@ -1,11 +1,13 @@
+import inspect
 import traceback
-from types import NoneType, UnionType
+from types import FrameType, NoneType, UnionType
 from typing import Any, Callable, Generic, TypeVar, cast
 from warnings import warn
 from autoproperty.exceptions.Exceptions import AccessModNotRecognized
 from autoproperty.fieldvalidator import FieldValidator
 from autoproperty.accesscontroller import PropMethodAccessController
 from autoproperty.autoproperty_methods import AutopropGetter, AutopropSetter
+from autoproperty.interfaces.autoproperty_methods import IAutopropBase, IAutopropGetter, IAutopropSetter
 from autoproperty.prop_settings import AutoPropAccessMod
 
 T = TypeVar('T')
@@ -18,8 +20,17 @@ class AutoProperty(Generic[T]):
     g_access_mod: AutoPropAccessMod
     s_access_mod: AutoPropAccessMod
     docstr: str | None = None
-    setter: AutopropSetter
-    getter: AutopropGetter
+    setter: IAutopropSetter
+    getter: IAutopropGetter
+    bound_class_qualname: str
+
+    def __new__(
+        cls,
+        *args,
+        **kwargs
+        ):
+        
+        return super().__new__(cls)
 
     def __init__(
         self,
@@ -71,6 +82,11 @@ class AutoProperty(Generic[T]):
             warn("Invalid setter access level. Setter level can't be higher than property's", SyntaxWarning)
             self.s_access_mod = default
 
+
+        frame = inspect.currentframe()
+        
+        self.bound_class_qualname = self.__get_class_qualname(frame)
+
         if func is not None:
             self._varname = "__" + func.__name__[0].lower() + func.__name__[1:]
 
@@ -81,11 +97,29 @@ class AutoProperty(Generic[T]):
             except StopIteration:
                 annotation = None
 
-            tmp1: AutopropGetter = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod)
-            tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod, annotation)
+            tmp1: AutopropGetter = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod, self)
+            tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod, annotation, self)
 
             self.getter = cast(AutopropGetter, PropMethodAccessController[T](self.g_access_mod)(tmp1))
-            self.setter = cast(AutopropSetter, PropMethodAccessController[NoneType](self.s_access_mod)(FieldValidator(self._varname, self.annotationType)(tmp2)))
+            self.setter = cast(AutopropSetter, PropMethodAccessController[NoneType](self.s_access_mod)(cast(IAutopropBase, FieldValidator(self._varname, self.annotationType)(tmp2))))
+
+    def __get_class_qualname(self, frame: FrameType | None) -> str:
+
+        try:
+
+            # temp plugs
+            if frame is None:
+                raise Exception("Something unexpected happened! :(")
+            if frame.f_back is None:
+                raise Exception("Something unexpected happened! :(")
+            if frame.f_back.f_back is None:
+                raise Exception("Something unexpected happened! :(")
+            
+            locals = frame.f_back.f_back.f_locals
+
+            return cast(str, locals.get("__qualname__"))
+        finally:
+            del frame
 
     def __call__(
         self,
@@ -101,11 +135,11 @@ class AutoProperty(Generic[T]):
         except StopIteration:
             annotation = None
             
-        tmp1: AutopropGetter[T] = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod)
-        tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod, annotation)
+        tmp1: AutopropGetter[T] = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod, self)
+        tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod, annotation, self)
 
         self.getter = cast(AutopropGetter, PropMethodAccessController[T](self.g_access_mod)(tmp1))
-        self.setter = cast(AutopropSetter, PropMethodAccessController[NoneType](self.s_access_mod)(FieldValidator(self._varname, self.annotationType)(tmp2)))
+        self.setter = cast(AutopropSetter, PropMethodAccessController[NoneType](self.s_access_mod)(cast(IAutopropBase, FieldValidator(self._varname, self.annotationType)(tmp2))))
             
         return self
 
