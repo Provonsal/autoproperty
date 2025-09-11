@@ -1,5 +1,5 @@
 from autoproperty import AutoProperty
-from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod
+from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethodError
 from autoproperty.prop_settings import AutoPropAccessMod
 
 
@@ -27,21 +27,21 @@ def test_str_public_parse():
     try:
         CL1()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # inside the inheritor
     try:
         CL2()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # in unknown class
     try:
         cls = CL3()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
     # outside the class
@@ -50,7 +50,7 @@ def test_str_public_parse():
         cls.X = 100
         print(cls.X)
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
 
@@ -78,21 +78,21 @@ def test_str_protected_parse():
     try:
         CL1()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # inside the inheritor
     try:
         CL2()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # in unknown class
     try:
         cls = CL3()
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
     # outside the class
@@ -101,7 +101,7 @@ def test_str_protected_parse():
         cls.X = 100
         print(cls.X)
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
 
@@ -130,21 +130,21 @@ def test_str_private_parse():
     try:
         CL1()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # inside the inheritor
     try:
         CL2()
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
     # in unknown class
     try:
         cls = CL3()
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
     # outside the class
@@ -153,7 +153,7 @@ def test_str_private_parse():
         cls.X = 100
         print(cls.X)
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
 
@@ -181,21 +181,21 @@ def test_int_public_parse():
     try:
         CL1()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # inside the inheritor
     try:
         CL2()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # in unknown class
     try:
         cls = CL3()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
     # outside the class
@@ -204,7 +204,7 @@ def test_int_public_parse():
         cls.X = 100
         print(cls.X)
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
 
@@ -232,21 +232,21 @@ def test_int_protected_parse():
     try:
         CL1()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # inside the inheritor
     try:
         CL2()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # in unknown class
     try:
         cls = CL3()
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
     # outside the class
@@ -255,7 +255,7 @@ def test_int_protected_parse():
         cls.X = 100
         print(cls.X)
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
 
@@ -284,21 +284,21 @@ def test_int_private_parse():
     try:
         CL1()
         assert True
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
 
     # inside the inheritor
     try:
         CL2()
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
     # in unknown class
     try:
         cls = CL3()
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
 
     # outside the class
@@ -307,5 +307,5 @@ def test_int_private_parse():
         cls.X = 100
         print(cls.X)
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True

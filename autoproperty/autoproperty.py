@@ -3,7 +3,7 @@ import traceback
 from types import FrameType, NoneType, UnionType
 from typing import Any, Callable, Generic, TypeVar, cast
 from warnings import warn
-from autoproperty.exceptions.Exceptions import AccessModNotRecognized
+from autoproperty.exceptions.Exceptions import AccessModNotRecognizedError
 from autoproperty.fieldvalidator import FieldValidator
 from autoproperty.accesscontroller import PropMethodAccessController
 from autoproperty.autoproperty_methods import AutopropGetter, AutopropSetter
@@ -16,9 +16,6 @@ F = TypeVar('F', bound=Callable[..., Any])
 class AutoProperty(Generic[T]):
 
     annotationType: type | UnionType | None
-    access_mod: AutoPropAccessMod
-    g_access_mod: AutoPropAccessMod
-    s_access_mod: AutoPropAccessMod
     docstr: str | None = None
     setter: IAutopropSetter
     getter: IAutopropGetter
@@ -36,52 +33,11 @@ class AutoProperty(Generic[T]):
         self,
         func: Callable[..., Any] | None = None,
         annotationType: type | UnionType | None = None,
-        access_mod: AutoPropAccessMod | int | str = AutoPropAccessMod.Private,
-        g_access_mod: AutoPropAccessMod | int | str | None = None,
-        s_access_mod: AutoPropAccessMod | int | str | None = None,
         docstr: str | None = None
     ):
 
         self.docstr = docstr
         self.annotationType = annotationType
-        if isinstance(access_mod, AutoPropAccessMod):
-            self.access_mod = access_mod
-        elif isinstance(access_mod, int):
-            self.access_mod = AutoPropAccessMod(access_mod)
-        else:
-            self.access_mod = AutoPropAccessMod(
-                self.__parse_access_str_int(access_mod))
-
-        default = self.access_mod
-
-        if g_access_mod is None:
-            self.g_access_mod = default
-        elif isinstance(g_access_mod, AutoPropAccessMod):
-            self.g_access_mod = g_access_mod
-        elif isinstance(g_access_mod, int):
-            self.g_access_mod = AutoPropAccessMod(g_access_mod)
-        else:
-            self.g_access_mod = AutoPropAccessMod(
-                self.__parse_access_str_int(g_access_mod))
-
-        if s_access_mod is None:
-            self.s_access_mod = default
-        elif isinstance(s_access_mod, AutoPropAccessMod):
-            self.s_access_mod = s_access_mod
-        elif isinstance(s_access_mod, int):
-            self.s_access_mod = AutoPropAccessMod(s_access_mod)
-        else:
-            self.s_access_mod = AutoPropAccessMod(
-                self.__parse_access_str_int(s_access_mod))
-
-        if self.g_access_mod < self.access_mod:
-            warn("Invalid getter access level. Getter level can't be higher than property's", SyntaxWarning)
-            self.g_access_mod = default
-
-        if self.s_access_mod < self.access_mod:
-            warn("Invalid setter access level. Setter level can't be higher than property's", SyntaxWarning)
-            self.s_access_mod = default
-
 
         frame = inspect.currentframe()
         
@@ -97,11 +53,12 @@ class AutoProperty(Generic[T]):
             except StopIteration:
                 annotation = None
 
-            tmp1: AutopropGetter = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod, self)
-            tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod, annotation, self)
+            tmp1: AutopropGetter[T] = AutopropGetter[T](self._prop_name, self._varname, self)
+            tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, annotation, self)
 
-            self.getter = cast(AutopropGetter, PropMethodAccessController[T](self.g_access_mod)(tmp1))
+            self.getter = tmp1
             self.setter = cast(AutopropSetter, PropMethodAccessController[NoneType](self.s_access_mod)(cast(IAutopropBase, FieldValidator(self._varname, self.annotationType)(tmp2))))
+            
 
     def __get_class_qualname(self, frame: FrameType | None) -> str:
 
@@ -161,7 +118,7 @@ class AutoProperty(Generic[T]):
             case "private":
                 return 2
             case _:
-                raise AccessModNotRecognized(access, (AutoPropAccessMod))
+                raise AccessModNotRecognizedError(access, (AutoPropAccessMod))
 
     def _get_docstring(self, func: Callable, attr_type):
 

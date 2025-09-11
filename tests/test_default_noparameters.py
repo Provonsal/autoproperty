@@ -1,5 +1,5 @@
 from autoproperty import AutoProperty
-from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod
+from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethodError
 from autoproperty.prop_settings import AutoPropAccessMod
 
 
@@ -27,21 +27,21 @@ def test_no_parameters_passed():
     try:
         CL1()
         assert True    
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert False
     
     # inside the inheritor        
     try:
         CL2()
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
         
     # in unknown class
     try:
         cls = CL3()
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True
     
     # outside the class    
@@ -50,5 +50,5 @@ def test_no_parameters_passed():
         cls.X = 100
         print(cls.X)
         assert False
-    except UnaccessiblePropertyMethod:
+    except UnaccessiblePropertyMethodError:
         assert True

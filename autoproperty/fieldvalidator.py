@@ -2,9 +2,10 @@ from functools import wraps
 import inspect
 from types import NoneType, UnionType
 from typing import Any, Callable, Iterable, Mapping
+from pydantic import validate_call
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
-from autoproperty.exceptions.Exceptions import AnnotationNotFound, AnnotationOverlap
+from autoproperty.exceptions.Exceptions import AnnotationNotFoundError, AnnotationOverlapError
 from autoproperty.interfaces.autoproperty_methods import IAutopropSetter
 
 
@@ -34,7 +35,7 @@ class FieldValidator:
         :param NoneType | UnionType | type | None annotation_type: Type for check typing.
         """
 
-        self._field_name: str = field_name if isinstance(field_name, Iterable) else (field_name)
+        self._field_name = field_name if isinstance(field_name, Iterable) else (field_name)
 
         if isinstance(annotation_type, (NoneType, UnionType, type)):
             self._annotation_type = annotation_type
@@ -85,20 +86,20 @@ class FieldValidator:
                 elif class_annotations[attribute_name] == annotation:
                     return
                 else:
-                    raise AnnotationOverlap()
+                    raise AnnotationOverlapError()
         except KeyError:
             clsobj.__annotations__[attribute_name] = annotation
 
     @staticmethod
-    def get_field_annotation(clsobj: object, field_name: str) -> type | UnionType:
+    def get_class_annotation(clsobj: object, field_name: str) -> type | UnionType:
        
         # Пытаемся взять все существующие аннотации класса
-        annotations: Mapping[str, type] = inspect.get_annotations(clsobj.__class__)
+        annotations = inspect.get_annotations(clsobj.__class__)
         
-        if annotations.get(field_name) is not None:
+        if len(annotations) > 0 and annotations.get(field_name) is not None:
             return annotations[field_name]
         else:
-            raise AnnotationNotFound("No annotation detected")
+            raise AnnotationNotFoundError("No annotation detected")
         
 
     def _get_param_annotation(self) -> type | UnionType:
@@ -106,62 +107,46 @@ class FieldValidator:
         if self._annotation_type is not None:
             return self._annotation_type
         else:
-            raise AnnotationNotFound("No annotation detected")
+            raise AnnotationNotFoundError("No annotation detected")
 
 
     @staticmethod
     def get_func_annotation(func: Callable, field_name: str):
 
+        # Checking if the passed function is a setter for autoprop
         if isinstance(func, IAutopropSetter):
+            
+            # If value type is written in the field __value_type__ then returning it
             if func.__value_type__ is not None:
                 return func.__value_type__
             else:
-                raise AnnotationNotFound("No annotation detected")
-
-        # Пытаемся взять все существующие аннотации параметров функции
-        annotations: dict[str, type | UnionType] = getattr(
-            func, "__annotations__")
-
-        if len(annotations) > 0 and annotations.get(field_name) is not None:
-            return annotations[field_name]
+                # otherwise raising an error
+                raise AnnotationNotFoundError("No annotation detected")
         else:
-            raise AnnotationNotFound("No annotation detected")
+            # Taking annotations
+            annotations = inspect.get_annotations(func)
 
-    def _check_args(self, args: Iterable, kwargs: Mapping[str, Any], attr_type: type | UnionType):
-
-        if attr_type is not None:
-            for arg in args:
-                if not isinstance(arg, attr_type):
-                    raise TypeError(
-                        f"Wrong field type. Type should be {attr_type}, but got {type(arg)} instead")
-
-            for value in kwargs.values():
-                if not isinstance(value, attr_type):
-                    raise TypeError(
-                        f"Wrong field type. Type should be {attr_type}, but got {type(value)} instead")
-        else:
-            raise ValueError("Type is none")
+            if len(annotations) > 0 and annotations.get(field_name) is not None:
+                return annotations[field_name]
+            else:
+                raise AnnotationNotFoundError("No annotation detected")
 
     def __call__(self, func: AutopropBase):
 
         @wraps(func)
-        def wrapper(cls, *args, **kwargs):
-
-            self.create_annotations(cls)
+        def wrapper(cls, value):
 
             # Получаем аннотацию для проверки поля класса
             try:
-                attr_annotation = self.get_field_annotation(cls, self._field_name)
-            except AnnotationNotFound:
+                attr_annotation = self._get_param_annotation()
+            except AnnotationNotFoundError:
                 try:
-                    attr_annotation = self._get_param_annotation()
-                except AnnotationNotFound:
+                    attr_annotation = self.get_class_annotation(cls, self._field_name)
+                except AnnotationNotFoundError:
                     attr_annotation = self.get_func_annotation(func, self._field_name)
 
-            self.set_annotation_to_class(cls, attr_annotation, self._field_name)
+            func.__call__.__annotations__["value"] = attr_annotation
 
-            self._check_args(args, kwargs, attr_annotation)
-
-            return func(cls, *args)
+            return validate_call(func.__call__)(cls, value)
 
         return wrapper

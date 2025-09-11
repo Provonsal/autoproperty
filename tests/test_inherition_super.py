@@ -1,5 +1,5 @@
 from autoproperty.autoproperty import AutoProperty
-from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod
+from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethodError
 from autoproperty.prop_settings import AutoPropAccessMod
 
 

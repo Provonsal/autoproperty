@@ -10,8 +10,8 @@ T = TypeVar('T')
 
 class AutopropGetter(Generic[T], AutopropBase):
 
-    def __init__(self, prop_name: str,  varname: str, g_access_mod: AutoPropAccessMod, belong: IAutoProperty):
-        super().__init__(prop_name, varname, g_access_mod, belong, AutoPropType.Getter)
+    def __init__(self, prop_name: str,  varname: str, belong: IAutoProperty):
+        super().__init__(prop_name, varname, belong, AutoPropType.Getter)
         return
 
     def __call__(self, clsinst: object) -> T|None:

@@ -5,7 +5,7 @@ from typing import Callable, Generic, TypeVar
 
 from autoproperty.interfaces.autoproperty_methods import IAutoProperty, IAutopropBase
 from autoproperty.prop_settings import AutoPropAccessMod
-from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethod, AccessModNotRecognized
+from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethodError, AccessModNotRecognizedError
 
 T = TypeVar('T')
 
@@ -77,7 +77,7 @@ class PropMethodAccessController(Generic[T]):
                         if class_caller is cls and cls_with_private_method is None:
                             return obj(cls, *args, **kwargs)
                         else:
-                            raise UnaccessiblePropertyMethod(obj)
+                            raise UnaccessiblePropertyMethodError(obj)
 
                     case AutoPropAccessMod.Public:
 
@@ -88,9 +88,9 @@ class PropMethodAccessController(Generic[T]):
                         if class_caller is cls or isinstance(class_caller, cls.__class__):
                             return obj(cls, *args, **kwargs)
                         else:
-                            raise UnaccessiblePropertyMethod(obj)
+                            raise UnaccessiblePropertyMethodError(obj)
                     case _:
-                        raise AccessModNotRecognized(self.access, (AutoPropAccessMod.Public, AutoPropAccessMod.Private, AutoPropAccessMod.Protected))
+                        raise AccessModNotRecognizedError(self.access, (AutoPropAccessMod.Public, AutoPropAccessMod.Private, AutoPropAccessMod.Protected))
             finally:
                 del frame
 
