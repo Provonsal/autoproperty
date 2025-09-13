@@ -1,11 +1,11 @@
 from functools import wraps
 import inspect
 from types import NoneType, UnionType
-from typing import Any, Callable, Iterable, Mapping
-from pydantic import validate_call
+from typing import Callable, Iterable
+from pydantic import ConfigDict, validate_call
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
-from autoproperty.exceptions.Exceptions import AnnotationNotFoundError, AnnotationOverlapError
+from autoproperty.exceptions.Exceptions import AnnotationNotFoundError
 from autoproperty.interfaces.autoproperty_methods import IAutopropSetter
 
 
@@ -103,6 +103,8 @@ class FieldValidator:
             # Adding found annotation to function's annotation
             func.__call__.__annotations__["value"] = attr_annotation
 
-            return validate_call(func.__call__)(cls, value)
+            decorated_func = validate_call(config=ConfigDict(strict=True))(func.__call__)
+
+            return decorated_func(cls, value)
 
         return wrapper

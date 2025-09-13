@@ -1,8 +1,6 @@
-
-
 from types import UnionType
 from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
-from autoproperty.prop_settings import AutoPropAccessMod, AutoPropType
+from autoproperty.prop_settings import AutoPropType
 
 
 T = TypeVar("T", covariant=True)
@@ -20,7 +18,7 @@ class IAutopropGetter(IAutopropBase, Protocol):
     
     def __init__(self, prop_name: str, varname: str, belong: "IAutoProperty") -> None: ...
     
-    def __call__(self, clsinst: object) -> object | None: ...
+    def __call__(self) -> Any | None: ...
     
 @runtime_checkable
 class IAutopropSetter(IAutopropBase, Protocol):
@@ -29,7 +27,7 @@ class IAutopropSetter(IAutopropBase, Protocol):
     
     def __init__(self,prop_name: str, varname: str, value_type: Any, belong: "IAutoProperty") -> None: ...
     
-    def __call__(self, clsinst: object, value: Any) -> None: ...
+    def __call__(self, cls: object, value: Any) -> None: ...
     
 @runtime_checkable
 class IAutoProperty(Generic[T], Protocol):

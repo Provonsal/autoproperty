@@ -1,6 +1,5 @@
 from functools import wraps
 import inspect
-import traceback
 from typing import Callable, Generic, TypeVar
 
 from autoproperty.interfaces.autoproperty_methods import IAutoProperty, IAutopropBase
@@ -9,7 +8,13 @@ from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethodError, 
 
 T = TypeVar('T')
 
+
+# Deprecated
 class PropMethodAccessController(Generic[T]):
+
+    """
+    Deprecated
+    """
 
     def __init__(self, access: AutoPropAccessMod):
         self.access: AutoPropAccessMod = access

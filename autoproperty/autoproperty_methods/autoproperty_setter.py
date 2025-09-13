@@ -1,9 +1,8 @@
-
 from typing import Any
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
 from autoproperty.interfaces.autoproperty_methods import IAutoProperty
 from autoproperty.interfaces.autoproperty_methods import IAutopropSetter
-from autoproperty.prop_settings import AutoPropAccessMod, AutoPropType
+from autoproperty.prop_settings import AutoPropType
 
 
 class AutopropSetter(AutopropBase, IAutopropSetter):
@@ -14,5 +13,5 @@ class AutopropSetter(AutopropBase, IAutopropSetter):
         self.__value_type__ = value_type
         return
 
-    def __call__(self, clsinst: object, value: Any):
-        setattr(clsinst, self.__prop_attr_name__, value)
+    def __call__(self, cls: object, value: Any):
+        setattr(self.__auto_prop__, self.__prop_attr_name__, value)

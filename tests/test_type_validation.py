@@ -1,6 +1,5 @@
+from pydantic import ValidationError
 from autoproperty import AutoProperty
-from autoproperty.exceptions.Exceptions import UnaccessiblePropertyMethodError
-from autoproperty.prop_settings import AutoPropAccessMod
 
 def test_wrong_type():
     class CL1:
@@ -8,7 +7,7 @@ def test_wrong_type():
             self.X = "12"
             print(self.X)
             
-        @AutoProperty[int](annotationType=int, access_mod=AutoPropAccessMod.Public)
+        @AutoProperty[int](annotationType=int)
         def X(self): ...
 
     class CL2(CL1):
@@ -26,21 +25,21 @@ def test_wrong_type():
     try:
         CL1()
         assert False    
-    except TypeError:
+    except ValidationError:
         assert True
     
     # inside the inheritor        
     try:
         CL2()
         assert False
-    except TypeError:
+    except ValidationError:
         assert True
         
     # in unknown class
     try:
         cls = CL3()
         assert False
-    except TypeError:
+    except ValidationError:
         assert True
     
     # outside the class    
@@ -49,5 +48,56 @@ def test_wrong_type():
         cls.X = "100"
         print(cls.X)
         assert False
-    except TypeError:
+    except ValidationError:
         assert True
+
+def test_correct_type():
+    class CL1:
+        def __init__(self):
+            self.X = 12
+            print(self.X)
+            
+        @AutoProperty[int](annotationType=int)
+        def X(self): ...
+
+    class CL2(CL1):
+        def __init__(self):
+            self.X = 10
+            print(self.X)
+
+    class CL3:
+        def __init__(self):
+            cls = CL1()
+            cls.X = 121
+            print(cls.X)
+            
+    # in home class
+    try:
+        CL1()
+        assert True    
+    except ValidationError:
+        assert False
+    
+    # inside the inheritor        
+    try:
+        CL2()
+        assert True
+    except ValidationError:
+        assert False
+        
+    # in unknown class
+    try:
+        cls = CL3()
+        assert True
+    except ValidationError:
+        assert False
+    
+    # outside the class    
+    try:
+        cls = CL1()
+        cls.X = 100
+        print(cls.X)
+        assert True
+    except ValidationError:
+        assert False
+

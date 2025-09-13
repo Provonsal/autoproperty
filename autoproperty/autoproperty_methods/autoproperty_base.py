@@ -1,5 +1,5 @@
 from autoproperty.interfaces.autoproperty_methods import IAutoProperty
-from autoproperty.prop_settings import AutoPropAccessMod, AutoPropType
+from autoproperty.prop_settings import AutoPropType
 
 class AutopropBase:
 
