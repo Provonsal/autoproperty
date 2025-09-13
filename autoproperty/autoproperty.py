@@ -11,19 +11,17 @@ F = TypeVar('F', bound=Callable[..., Any])
 class AutoProperty(Generic[T]):
 
     annotationType: type | UnionType | None
-    docstr: str | None = None
     setter: IAutopropSetter
     getter: IAutopropGetter
     bound_class_qualname: str
+
 
     def __init__(
         self,
         func: Callable[..., Any] | None = None,
         annotationType: type | UnionType | None = None,
-        docstr: str | None = None
     ):
-
-        self.docstr = docstr
+        
         self.annotationType = annotationType
 
         # Getting frame to get the qualname
@@ -31,6 +29,8 @@ class AutoProperty(Generic[T]):
         
         # Getting qualname
         self.bound_class_qualname = self.__get_class_qualname(frame)
+
+        del frame
 
         if func is not None:
             # Creating name for a field that will be containing value
@@ -54,6 +54,7 @@ class AutoProperty(Generic[T]):
 
             # Using FieldValidator decorator and casting it to AutopropSetter
             self.setter = cast(AutopropSetter, FieldValidator(self._varname, self.annotationType)(tmp2))
+            #self.setter = tmp2
             
 
     def __get_class_qualname(self, frame: FrameType | None) -> str:
@@ -82,8 +83,12 @@ class AutoProperty(Generic[T]):
         func: Callable[..., Any]
         ) -> "AutoProperty[T]":
         
+        self.__doc__ = func.__doc__
+
         # Creating name for a field that will be containing value
         self._varname = "__" + func.__name__[0].lower() + func.__name__[1:]
+
+        self.__setattr__(self._varname, None)
 
         # Setting a name for the property based on passed function 
         self._prop_name = func.__name__
@@ -111,27 +116,12 @@ class AutoProperty(Generic[T]):
     def __set__(self, instance, obj):
         self.setter(instance, obj)
 
-    def __get__(self, instance, owner=None) -> T | None:
+    def __get__(self, instance, owner=None):
         
         # If instance is not exist then return class type
         if instance is None:
             return self #type: ignore
-        
-        # Returning value
+
         return self.getter()
 
-    def _get_docstring(self, func: Callable, attr_type):
-
-        try:
-            # Trying to take docstring from the fields of autoproperty
-            assert self.docstr is not None
-            return self.docstr
-        except AssertionError:
-            try:
-                # If not found then trying to get from functions docstring
-                assert func.__doc__ is not None
-                return func.__doc__
-            except AssertionError:
-                # If nothing found returning the default docstring
-                return f"Auto property. Name: {func.__name__}, type: {attr_type}, returns: {func.__annotations__.get('return')}"
 

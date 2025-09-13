@@ -58,7 +58,12 @@ def test_correct_type():
             print(self.X)
             
         @AutoProperty[int](annotationType=int)
-        def X(self): ...
+        def X(self): 
+            """Blablabla"""
+            ...
+
+        def method(self):
+            self.X
 
     class CL2(CL1):
         def __init__(self):

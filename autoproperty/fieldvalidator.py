@@ -43,7 +43,7 @@ class FieldValidator:
             raise TypeError("Annotation type is invalid")
 
     @staticmethod
-    def get_class_annotation(clsobj: object, field_name: str) -> type | UnionType:
+    def get_class_annotation(clsobj: object, field_name: str) -> type | UnionType | None:
        
         # Taking annotations from class
         annotations = inspect.get_annotations(clsobj.__class__)
@@ -51,14 +51,16 @@ class FieldValidator:
         if len(annotations) > 0 and annotations.get(field_name) is not None:
             return annotations[field_name]
         else:
-            raise AnnotationNotFoundError("No annotation detected")
+            return None
+            #raise AnnotationNotFoundError("No annotation detected")
         
-    def _get_param_annotation(self) -> type | UnionType:
+    def _get_param_annotation(self) -> type | UnionType | None:
         
         if self._annotation_type is not None:
             return self._annotation_type
         else:
-            raise AnnotationNotFoundError("No annotation detected")
+            return None
+            #raise AnnotationNotFoundError("No annotation detected")
 
     @staticmethod
     def get_func_annotation(func: Callable, field_name: str):
@@ -70,8 +72,9 @@ class FieldValidator:
             if func.__value_type__ is not None:
                 return func.__value_type__
             else:
+                return None
                 # otherwise raising an error
-                raise AnnotationNotFoundError("No annotation detected")
+                #raise AnnotationNotFoundError("No annotation detected")
         else:
             # Taking annotations from callable
             annotations = inspect.get_annotations(func)
@@ -80,31 +83,46 @@ class FieldValidator:
             if len(annotations) > 0 and annotations.get(field_name) is not None:
                 return annotations[field_name]
             else:
+                return None
                 # If annotation is empty throw an error
-                raise AnnotationNotFoundError("No annotation detected")
+                #raise AnnotationNotFoundError("No annotation detected")
 
     def __call__(self, func: AutopropBase):
 
         @wraps(func)
         def wrapper(cls, value):
 
-            # Tring to take annotation from any of three places
-            try:
-                # First trying to take from parameters
-                attr_annotation = self._get_param_annotation()
-            except AnnotationNotFoundError:
-                try:
-                    # Second trying to take from class annotations
-                    attr_annotation = self.get_class_annotation(cls, self._field_name)
-                except AnnotationNotFoundError:
+            # # Tring to take annotation from any of three places
+            # try:
+            #     # First trying to take from parameters
+            #     attr_annotation = self._get_param_annotation()
+            # except AnnotationNotFoundError:
+            #     try:
+            #         # Second trying to take from class annotations
+            #         attr_annotation = self.get_class_annotation(cls, self._field_name)
+            #     except AnnotationNotFoundError:
+            #         # Third tring to take from function's arguments annotations
+            #         attr_annotation = self.get_func_annotation(func, self._field_name)
+
+            # First trying to take from parameters
+            attr_annotation = self._get_param_annotation()
+            
+            if attr_annotation is None:
+                
+                # Second trying to take from class annotations
+                attr_annotation = self.get_class_annotation(cls, self._field_name)
+                
+                if attr_annotation is None:
                     # Third tring to take from function's arguments annotations
                     attr_annotation = self.get_func_annotation(func, self._field_name)
 
             # Adding found annotation to function's annotation
             func.__call__.__annotations__["value"] = attr_annotation
 
+            # Decorating function by pydantic validator with parsing turned off
             decorated_func = validate_call(config=ConfigDict(strict=True))(func.__call__)
 
+            # Calling and returning decorated function's data
             return decorated_func(cls, value)
 
         return wrapper

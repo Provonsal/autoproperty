@@ -13,4 +13,7 @@ class AutopropGetter(Generic[T], AutopropBase):
         return
 
     def __call__(self) -> T|None:
+        
         return getattr(self.__auto_prop__, self.__prop_attr_name__, None)
+
+        

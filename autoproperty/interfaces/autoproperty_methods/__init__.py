@@ -32,7 +32,6 @@ class IAutopropSetter(IAutopropBase, Protocol):
 @runtime_checkable
 class IAutoProperty(Generic[T], Protocol):
     annotationType: type | UnionType | None
-    docstr: str | None = None
     setter: IAutopropSetter
     getter: IAutopropGetter
     bound_class_qualname: str
