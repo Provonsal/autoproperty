@@ -7,7 +7,7 @@ def test_wrong_type():
             self.X = "12"
             print(self.X)
             
-        @AutoProperty[int](annotationType=int)
+        @AutoProperty[int](annotation_type=int)
         def X(self): ...
 
     class CL2(CL1):
@@ -57,7 +57,7 @@ def test_correct_type():
             self.X = 12
             print(self.X)
             
-        @AutoProperty[int](annotationType=int)
+        @AutoProperty[int](annotation_type=int)
         def X(self): 
             """Blablabla"""
             ...

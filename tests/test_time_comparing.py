@@ -1,7 +1,11 @@
 import time
+
+import line_profiler
 from autoproperty import AutoProperty
 import timeit
 from dis import dis
+
+AutoProperty.validate_fields = False
 
 def time_comparing():
     
@@ -25,9 +29,10 @@ def time_comparing():
     class A():
 
         __y: int
+        
 
-        @AutoProperty[int](annotationType=int)
-        def X(self):
+        @AutoProperty
+        def X(self) -> int:
             ...
 
         @property
@@ -47,14 +52,35 @@ def time_comparing():
 
     obj = A(3,3,3)
 
-    execution_time_autoproperty = timeit.timeit(lambda: obj.X, number=10000000)
-    execution_time_property = timeit.timeit(lambda: obj.Y, number=10000000)
-    execution_time_custom_descriptor = timeit.timeit(lambda: obj.Z, number=10000000)
+    @line_profiler.profile
+    def func1():
+        obj.X
+
+    @line_profiler.profile
+    def func2():
+        obj.Y
+
+    @line_profiler.profile
+    def func3():
+        obj.X = 2
+
+    @line_profiler.profile
+    def func4():
+        obj.Y = 2
+
+    execution_time_autoproperty = timeit.timeit(func1, number=100000)
+    execution_time_property = timeit.timeit(func2, number=100000)
+    execution_time_autoproperty_write = timeit.timeit(func3, number=10000)
+    execution_time_property_write = timeit.timeit(func4, number=10000)
+    execution_time_custom_descriptor = timeit.timeit(lambda: obj.Z, number=10000)
 
     print("autoproperty time: ", execution_time_autoproperty)
     print("property time: ", execution_time_property)
+    print("autoproperty setter time: ", execution_time_autoproperty_write)
+    print("property setter time: ", execution_time_property_write)
     print("descriptor time: ", execution_time_custom_descriptor)
-    print("diff", execution_time_autoproperty/execution_time_property)
+    print("diff 1", execution_time_autoproperty/execution_time_property)
+    print("diff 2", execution_time_autoproperty_write/execution_time_property_write)
 
 #     code = """
 # class A():

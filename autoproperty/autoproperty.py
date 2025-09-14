@@ -1,82 +1,110 @@
 import inspect
 from types import FrameType, UnionType
-from typing import Any, Callable, Generic, TypeVar, cast
+from typing import Any, Callable, Generic, TypeVar, cast, get_type_hints
+
+from line_profiler import profile
+
+from autoproperty.autoproperty_methods.autoproperty_getter import AutopropGetter
 from autoproperty.fieldvalidator import FieldValidator
-from autoproperty.autoproperty_methods import AutopropGetter, AutopropSetter
+from autoproperty.autoproperty_methods import AutopropSetter
 from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutopropSetter
+
 
 T = TypeVar('T')
 F = TypeVar('F', bound=Callable[..., Any])
 
 class AutoProperty(Generic[T]):
 
-    annotationType: type | UnionType | None
-    setter: IAutopropSetter
-    getter: IAutopropGetter
-    bound_class_qualname: str
+    __slots__ = ('annotation_type', 
+                 'setter', 'getter', 
+                 'bound_class_qualname', 
+                 'value', 
+                 '__doc__', 
+                 '_field_name', 
+                 'prop_name')
 
+    annotation_type: type | UnionType | None
+    setter: IAutopropSetter | None
+    getter: IAutopropGetter | None
+    bound_class_qualname: str
+    value: Any
+    _field_name: str | None
+    prop_name: str | None
+    validate_fields: bool = True
 
     def __init__(
         self,
         func: Callable[..., Any] | None = None,
-        annotationType: type | UnionType | None = None,
+        annotation_type: type | UnionType | None = None,
     ):
         
-        self.annotationType = annotationType
-
-        # Getting frame to get the qualname
-        frame = inspect.currentframe()
-        
-        # Getting qualname
-        self.bound_class_qualname = self.__get_class_qualname(frame)
-
-        del frame
+        self.prop_name = None
+        self.annotation_type = annotation_type
+        self.setter = None
+        self.getter = None
+        self._field_name = None
 
         if func is not None:
-            # Creating name for a field that will be containing value
-            self._varname = "__" + func.__name__[0].lower() + func.__name__[1:]
+            self._setup_from_func(func)
 
-            # Setting a name for the property based on passed function 
-            self._prop_name = func.__name__
-            
-            # Tring to take an annotation from passed function
+    def _setup_from_func(self, func: Callable[..., Any]):
+
+        # Extracting function name and creating a 
+        # name for field in the instance
+        self.prop_name = func.__name__
+        self._field_name = f"_{func.__name__}"
+
+        # Checking if annotation type 
+        # is not passed in arguments
+        if self.annotation_type is None:
             try:
-                annotation = func.__annotations__.values().__iter__().__next__()
-            except StopIteration:
-                annotation = None
+                hints = get_type_hints(func)
+                return_hint = hints.get('return')
+                
+                if return_hint is not None:
+                    self.annotation_type = return_hint
+            except Exception:
+                pass
 
-            # Creating setter and getter classes instances
-            tmp1: AutopropGetter[T] = AutopropGetter[T](self._prop_name, self._varname, self)
-            tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, annotation, self)
+        self._setup_getter_setter()
 
-            # Assigning getter's and setter's fields with created instances before 
-            self.getter = tmp1
+    def _setup_getter_setter(self):
+        if self.prop_name is not None and self._field_name is not None:
 
-            # Using FieldValidator decorator and casting it to AutopropSetter
-            self.setter = cast(AutopropSetter, FieldValidator(self._varname, self.annotationType)(tmp2))
-            #self.setter = tmp2
+            self.getter = AutopropGetter[T](self.prop_name, self._field_name, self)
             
-
-    def __get_class_qualname(self, frame: FrameType | None) -> str:
-
-        try:
-
-            # temp plugs
-            if frame is None:
-                raise Exception("Something unexpected happened! :(")
-            if frame.f_back is None:
-                raise Exception("Something unexpected happened! :(")
-            if frame.f_back.f_back is None:
-                raise Exception("Something unexpected happened! :(")
+            setter = AutopropSetter(self.prop_name, self._field_name, self.annotation_type, self)
             
-            # Falling back in frame 2 times
-            locals = frame.f_back.f_back.f_locals
+            if self.validate_fields:
+                setter_with_validator = FieldValidator(self._field_name, self.annotation_type)(setter)
+                self.setter = cast(AutopropSetter, setter_with_validator)
+            else:
+                self.setter = setter
+    
+    def __set_name__(self, owner: type, name: str) -> None:
+        
+        self.prop_name = name
+        self._field_name = f"_{name}" 
 
-            # Getting the qualname and returning
-            return cast(str, locals.get("__qualname__"))
-        finally:
-            # Deleting used frame
-            del frame
+        if self.annotation_type is None:
+            
+            hints = get_type_hints(owner)
+            
+            if self.annotation_type is None:
+                
+                self.annotation_type = hints.get(name)
+                
+                if self.annotation_type is None:
+                    raise TypeError("Annotation for validation are not provided.")    
+                else:
+                    self._setup_getter_setter()
+                
+            elif self.annotation_type is not hints.get(name):
+                raise TypeError("Type annotation is different")
+        
+
+        self._setup_getter_setter()
+
 
     def __call__(
         self,
@@ -84,44 +112,25 @@ class AutoProperty(Generic[T]):
         ) -> "AutoProperty[T]":
         
         self.__doc__ = func.__doc__
-
-        # Creating name for a field that will be containing value
-        self._varname = "__" + func.__name__[0].lower() + func.__name__[1:]
-
-        self.__setattr__(self._varname, None)
-
-        # Setting a name for the property based on passed function 
-        self._prop_name = func.__name__
-
-        # Tring to take an annotation from passed function
-        try:
-            # Getting next annotation from function annotations
-            annotation = func.__annotations__.values().__iter__().__next__()
-        except StopIteration:
-            annotation = None
-            
-        # Creating setter and getter classes instances
-        tmp1: AutopropGetter[T] = AutopropGetter[T](self._prop_name, self._varname, self)
-        tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, annotation, self)
-
-        # Assigning getter's and setter's fields with created instances before 
-        self.getter = tmp1
-
-        # Using FieldValidator decorator and casting it to AutopropSetter
-        self.setter = cast(AutopropSetter, FieldValidator(self._varname, self.annotationType)(tmp2))
-            
+        self._setup_from_func(func)
         return self
 
     
     def __set__(self, instance, obj):
-        self.setter(instance, obj)
+        if self.setter is None:
+            raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
+        self.setter.__set__(instance, obj)
 
+    
     def __get__(self, instance, owner=None):
         
-        # If instance is not exist then return class type
-        if instance is None:
-            return self #type: ignore
+        try:
+            return self.getter.__get__(instance, owner=owner) # type: ignore
+        except AttributeError:
 
-        return self.getter()
-
-
+            # If instance is not exist then return class type
+            if instance is None:
+                return self #type: ignore
+            else:
+                raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
+        

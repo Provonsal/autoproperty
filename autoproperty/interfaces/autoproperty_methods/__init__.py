@@ -16,22 +16,28 @@ class IAutopropBase(Protocol):
 @runtime_checkable
 class IAutopropGetter(IAutopropBase, Protocol):
     
-    def __init__(self, prop_name: str, varname: str, belong: "IAutoProperty") -> None: ...
+    def __init__(self, prop_name: str, attr_name: str, belong: "IAutoProperty") -> None: ...
     
-    def __call__(self) -> Any | None: ...
+    def __get__(self, instance, owner=None) -> Any | None: ...
     
 @runtime_checkable
 class IAutopropSetter(IAutopropBase, Protocol):
     
     __value_type__: Any
     
-    def __init__(self,prop_name: str, varname: str, value_type: Any, belong: "IAutoProperty") -> None: ...
+    def __init__(self,prop_name: str, attr_name: str, value_type: Any, belong: "IAutoProperty") -> None: ...
     
-    def __call__(self, cls: object, value: Any) -> None: ...
+    def __set__(self, cls: object, value: Any) -> None: ...
     
 @runtime_checkable
 class IAutoProperty(Generic[T], Protocol):
-    annotationType: type | UnionType | None
-    setter: IAutopropSetter
-    getter: IAutopropGetter
+
+    __slots__ = ('annotation_type', 'setter', 'getter', 'bound_class_qualname','value', '__doc__', '_field_name', 'prop_name')
+
+    annotation_type: type | UnionType | None
+    setter: IAutopropSetter | None
+    getter: IAutopropGetter | None
     bound_class_qualname: str
+    value: Any
+    _field_name: str | None
+    prop_name: str | None

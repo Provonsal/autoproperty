@@ -2,6 +2,7 @@ from functools import wraps
 import inspect
 from types import NoneType, UnionType
 from typing import Callable, Iterable
+from line_profiler import profile
 from pydantic import ConfigDict, validate_call
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
@@ -52,7 +53,7 @@ class FieldValidator:
             return annotations[field_name]
         else:
             return None
-            #raise AnnotationNotFoundError("No annotation detected")
+
         
     def _get_param_annotation(self) -> type | UnionType | None:
         
@@ -60,7 +61,7 @@ class FieldValidator:
             return self._annotation_type
         else:
             return None
-            #raise AnnotationNotFoundError("No annotation detected")
+
 
     @staticmethod
     def get_func_annotation(func: Callable, field_name: str):
@@ -73,8 +74,7 @@ class FieldValidator:
                 return func.__value_type__
             else:
                 return None
-                # otherwise raising an error
-                #raise AnnotationNotFoundError("No annotation detected")
+
         else:
             # Taking annotations from callable
             annotations = inspect.get_annotations(func)
@@ -84,37 +84,16 @@ class FieldValidator:
                 return annotations[field_name]
             else:
                 return None
-                # If annotation is empty throw an error
-                #raise AnnotationNotFoundError("No annotation detected")
+
 
     def __call__(self, func: AutopropBase):
 
         @wraps(func)
         def wrapper(cls, value):
 
-            # # Tring to take annotation from any of three places
-            # try:
-            #     # First trying to take from parameters
-            #     attr_annotation = self._get_param_annotation()
-            # except AnnotationNotFoundError:
-            #     try:
-            #         # Second trying to take from class annotations
-            #         attr_annotation = self.get_class_annotation(cls, self._field_name)
-            #     except AnnotationNotFoundError:
-            #         # Third tring to take from function's arguments annotations
-            #         attr_annotation = self.get_func_annotation(func, self._field_name)
-
+            # Tring to take annotation from any of three places
             # First trying to take from parameters
             attr_annotation = self._get_param_annotation()
-            
-            if attr_annotation is None:
-                
-                # Second trying to take from class annotations
-                attr_annotation = self.get_class_annotation(cls, self._field_name)
-                
-                if attr_annotation is None:
-                    # Third tring to take from function's arguments annotations
-                    attr_annotation = self.get_func_annotation(func, self._field_name)
 
             # Adding found annotation to function's annotation
             func.__call__.__annotations__["value"] = attr_annotation
