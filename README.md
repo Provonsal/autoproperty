@@ -36,12 +36,12 @@ Base syntax.
 
 ```python
 class Exmpl:
-    @AutoProperty[int] # <-- generic need for correct IDE syntax highlighting
-    def some_prop(self) -> int: ... # <-- no need to implement, it won't change anything
-                        # ^ type annotation for checking object in setter
+    @AutoProperty[int] # <- generic need for correct IDE syntax highlighting
+    def some_prop(self) -> int: ... # <- no need to implement, it won't change anything
+                          # ^ type annotation for checking object in setter
 
 obj = Exmpl()
-obj.SomeProp = 42
+obj.some_prop = 42
 ```
 
 In runtime it turns construction above to a construction like below:
@@ -65,11 +65,11 @@ You **have to** add at **least one** annotation to any of these **three places**
 
 ```python
 class Exmpl:
-    _some_prop: int # <-- one
+    _some_prop: int # <- one
 
-    @AutoProperty[int](annotationType=int) # <-- two
+    @AutoProperty[int](annotation_type=int) # <- two
     def some_prop(self) -> int: ...
-    #                     ^ three
+                          # ^ three
 ```
 
 ---
