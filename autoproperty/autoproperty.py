@@ -1,297 +1,177 @@
 import inspect
-import traceback
-from types import FrameType, NoneType, UnionType
-from typing import Any, Callable, Generic, TypeVar, cast
-from warnings import warn
-from autoproperty.exceptions.Exceptions import AccessModNotRecognized
+from types import FrameType, UnionType
+from typing import Any, Callable, Generic, TypeVar, cast, get_type_hints
+
+from line_profiler import profile
+
+from autoproperty.autoproperty_methods.autoproperty_getter import AutopropGetter
+from autoproperty.exceptions.Exceptions import AnnotationOverlapError
 from autoproperty.fieldvalidator import FieldValidator
-from autoproperty.accesscontroller import PropMethodAccessController
-from autoproperty.autoproperty_methods import AutopropGetter, AutopropSetter
-from autoproperty.interfaces.autoproperty_methods import IAutopropBase, IAutopropGetter, IAutopropSetter
-from autoproperty.prop_settings import AutoPropAccessMod
+from autoproperty.autoproperty_methods import AutopropSetter
+from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutopropSetter
+
 
 T = TypeVar('T')
 F = TypeVar('F', bound=Callable[..., Any])
 
 class AutoProperty(Generic[T]):
 
-    annotationType: type | UnionType | None
-    access_mod: AutoPropAccessMod
-    g_access_mod: AutoPropAccessMod
-    s_access_mod: AutoPropAccessMod
-    docstr: str | None = None
-    setter: IAutopropSetter
-    getter: IAutopropGetter
-    bound_class_qualname: str
+    __slots__ = ('annotation_type', 
+                 'setter', 'getter', 
+                 'bound_class_qualname', 
+                 'value', 
+                 '__doc__', 
+                 '_field_name', 
+                 'prop_name')
 
-    def __new__(
-        cls,
-        *args,
-        **kwargs
-        ):
-        
-        return super().__new__(cls)
+    annotation_type: type | UnionType | None
+    setter: IAutopropSetter | None
+    getter: IAutopropGetter | None
+    bound_class_qualname: str
+    value: Any
+    _field_name: str | None
+    prop_name: str | None
+    validate_fields: bool = True
 
     def __init__(
         self,
         func: Callable[..., Any] | None = None,
-        annotationType: type | UnionType | None = None,
-        access_mod: AutoPropAccessMod | int | str = AutoPropAccessMod.Private,
-        g_access_mod: AutoPropAccessMod | int | str | None = None,
-        s_access_mod: AutoPropAccessMod | int | str | None = None,
-        docstr: str | None = None
+        annotation_type: type | UnionType | None = None,
     ):
-
-        self.docstr = docstr
-        self.annotationType = annotationType
-        if isinstance(access_mod, AutoPropAccessMod):
-            self.access_mod = access_mod
-        elif isinstance(access_mod, int):
-            self.access_mod = AutoPropAccessMod(access_mod)
-        else:
-            self.access_mod = AutoPropAccessMod(
-                self.__parse_access_str_int(access_mod))
-
-        default = self.access_mod
-
-        if g_access_mod is None:
-            self.g_access_mod = default
-        elif isinstance(g_access_mod, AutoPropAccessMod):
-            self.g_access_mod = g_access_mod
-        elif isinstance(g_access_mod, int):
-            self.g_access_mod = AutoPropAccessMod(g_access_mod)
-        else:
-            self.g_access_mod = AutoPropAccessMod(
-                self.__parse_access_str_int(g_access_mod))
-
-        if s_access_mod is None:
-            self.s_access_mod = default
-        elif isinstance(s_access_mod, AutoPropAccessMod):
-            self.s_access_mod = s_access_mod
-        elif isinstance(s_access_mod, int):
-            self.s_access_mod = AutoPropAccessMod(s_access_mod)
-        else:
-            self.s_access_mod = AutoPropAccessMod(
-                self.__parse_access_str_int(s_access_mod))
-
-        if self.g_access_mod < self.access_mod:
-            warn("Invalid getter access level. Getter level can't be higher than property's", SyntaxWarning)
-            self.g_access_mod = default
-
-        if self.s_access_mod < self.access_mod:
-            warn("Invalid setter access level. Setter level can't be higher than property's", SyntaxWarning)
-            self.s_access_mod = default
-
-
-        frame = inspect.currentframe()
         
-        self.bound_class_qualname = self.__get_class_qualname(frame)
+        self.prop_name = None
+        self.annotation_type = annotation_type
+        self.setter = None
+        self.getter = None
+        self._field_name = None
 
         if func is not None:
-            self._varname = "__" + func.__name__[0].lower() + func.__name__[1:]
+            self._setup_from_func(func)
 
-            self._prop_name = func.__name__
-            
+    def _setup_from_func(self, func: Callable[..., Any]):
+
+        # Extracting function name and creating a 
+        # name for field in the instance
+        self.prop_name = func.__name__
+        self._field_name = f"_{func.__name__}"
+
+        # Checking if annotation type 
+        # is not passed in arguments
+        if self.annotation_type is None:
             try:
-                annotation = func.__annotations__.values().__iter__().__next__()
-            except StopIteration:
-                annotation = None
+                # Extracting annotations
+                hints = get_type_hints(func)
+                
+                # Caching annotation for return
+                return_hint = hints.get('return')
+                
+                # If found then assigning annotation to field
+                if return_hint is not None:
+                    self.annotation_type = return_hint
+            except Exception:
+                pass
 
-            tmp1: AutopropGetter = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod, self)
-            tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod, annotation, self)
+        # Starting setting up setter and getter
+        self._setup_getter_setter()
 
-            self.getter = cast(AutopropGetter, PropMethodAccessController[T](self.g_access_mod)(tmp1))
-            self.setter = cast(AutopropSetter, PropMethodAccessController[NoneType](self.s_access_mod)(cast(IAutopropBase, FieldValidator(self._varname, self.annotationType)(tmp2))))
+    def _setup_getter(self, prop_name: str, field_name: str):
+        
+        """Method for creating getter of autoproperty"""
+        
+        # Creating getter
+        self.getter = AutopropGetter[T](prop_name, field_name, self)
 
-    def __get_class_qualname(self, frame: FrameType | None) -> str:
+    def _setup_setter(self, prop_name, _field_name, annotation_type):
+        
+        """Method for creating setter of autoproperty"""
+        
+        # Creating setter
+        setter = AutopropSetter(prop_name, _field_name, annotation_type, self)
+        
+        # If need to valdiate then wrapping setter with field validator 
+        if self.validate_fields:
+            setter_with_validator = FieldValidator(_field_name, annotation_type)(setter)
+            self.setter = cast(AutopropSetter, setter_with_validator)
+        else:
+            # else just assigning setter
+            self.setter = setter
 
-        try:
+    def _setup_getter_setter(self):
+        
+        """Method for setting up setter and getter of auto property."""
+        
+        # Checking if got name from the function and have created the field name
+        if self.prop_name is not None and self._field_name is not None:
 
-            # temp plugs
-            if frame is None:
-                raise Exception("Something unexpected happened! :(")
-            if frame.f_back is None:
-                raise Exception("Something unexpected happened! :(")
-            if frame.f_back.f_back is None:
-                raise Exception("Something unexpected happened! :(")
+            self._setup_getter(self.prop_name, self._field_name)
+            self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
             
-            locals = frame.f_back.f_back.f_locals
+    
+    def __set_name__(self, owner: type, name: str) -> None:
+        
+        """Method that calling after __init__ cause this class is also a descriptor."""
+        
+        # If didnt get name yet then assing new name from the owner's class field name
+        if self.prop_name is None:
+            self.prop_name = name
+        
+        # If didnt make field name then make it from the owner's class field name
+        if self._field_name is None:
+            self._field_name = f"_{name}" 
 
-            return cast(str, locals.get("__qualname__"))
-        finally:
-            del frame
+        if self.validate_fields:
+
+            # Getting annotations from owner class
+            hints = get_type_hints(owner)
+            
+            # If no annotation provided in parameters of decorator
+            # then trying to get annotations from the owner class now
+            if self.annotation_type is None:
+                
+                self.annotation_type = hints.get(name)
+                
+                if self.annotation_type is None:
+                    raise TypeError("Annotation for validation are not provided.")    
+                else:
+                    self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
+                    return
+                    
+            # If annotation is provided after all then compare with existing in the
+            # owner class and if they are different then raise an error
+            elif self.annotation_type is not hints.get(name):
+                raise AnnotationOverlapError("Type annotation is different")
+            
+        else:
+            if self.setter is None and self.getter is None:
+                self._setup_getter_setter()
+            elif self.setter is None:
+                self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
+            elif self.getter is None:
+                self._setup_getter(self.prop_name, self._field_name)
 
     def __call__(
         self,
         func: Callable[..., Any]
         ) -> "AutoProperty[T]":
         
-        self._varname = "__" + func.__name__[0].lower() + func.__name__[1:]
-
-        self._prop_name = func.__name__
-        
-        try:
-            annotation = func.__annotations__.values().__iter__().__next__()
-        except StopIteration:
-            annotation = None
-            
-        tmp1: AutopropGetter[T] = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod, self)
-        tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod, annotation, self)
-
-        self.getter = cast(AutopropGetter, PropMethodAccessController[T](self.g_access_mod)(tmp1))
-        self.setter = cast(AutopropSetter, PropMethodAccessController[NoneType](self.s_access_mod)(cast(IAutopropBase, FieldValidator(self._varname, self.annotationType)(tmp2))))
-            
+        self.__doc__ = func.__doc__
+        self._setup_from_func(func)
         return self
-
     
     def __set__(self, instance, obj):
-        self.setter(instance, obj)
+        if self.setter is None:
+            raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
+        self.setter.__set__(instance, obj)
 
-    def __get__(self, instance, owner=None) -> T:
-        if instance is None:
-            return self #type: ignore
-        return self.getter(instance) #type: ignore
-
-    def __parse_access_str_int(self, access: str):
-        match access:
-            case "public":
-                return 0
-            case "protected":
-                return 1
-            case "private":
-                return 2
-            case _:
-                raise AccessModNotRecognized(access, (AutoPropAccessMod))
-
-    def _get_docstring(self, func: Callable, attr_type):
-
+    def __get__(self, instance, owner=None):
+        
         try:
-            assert self.docstr is not None
-            return self.docstr
-        except AssertionError:
-            try:
-                assert func.__doc__ is not None
-                return func.__doc__
-            except AssertionError:
-                return f"Auto property. Name: {func.__name__}, type: {attr_type}, returns: {func.__annotations__.get('return')}"
+            return self.getter.__get__(instance, owner=owner) # type: ignore
+        except AttributeError:
 
-# class AutoPropertyVar(Generic[T]):
-#     annotationType: type | UnionType | None
-#     access_mod: AutoPropAccessMod
-#     g_access_mod: AutoPropAccessMod
-#     s_access_mod: AutoPropAccessMod
-#     docstr: str | None = None
-
-#     def __init__(
-#         self,
-#         access_mod: AutoPropAccessMod | int | str = AutoPropAccessMod.Private,
-#         g_access_mod: AutoPropAccessMod | int | str | None = None,
-#         s_access_mod: AutoPropAccessMod | int | str | None = None,
-#         name: str | None = None,
-#         docstr: str | None = None
-#     ):
-
-#         self.docstr = docstr
-
-#         if isinstance(access_mod, AutoPropAccessMod):
-#             self.access_mod = access_mod
-#         elif isinstance(access_mod, int):
-#             self.access_mod = AutoPropAccessMod(access_mod)
-#         else:
-#             self.access_mod = AutoPropAccessMod(
-#                 self.__parse_access_str_int(access_mod))
-
-#         default = self.access_mod
-
-#         if g_access_mod is None:
-#             self.g_access_mod = default
-#         elif isinstance(g_access_mod, AutoPropAccessMod):
-#             self.g_access_mod = g_access_mod
-#         elif isinstance(g_access_mod, int):
-#             self.g_access_mod = AutoPropAccessMod(g_access_mod)
-#         else:
-#             self.g_access_mod = AutoPropAccessMod(
-#                 self.__parse_access_str_int(g_access_mod))
-
-#         if s_access_mod is None:
-#             self.s_access_mod = default
-#         elif isinstance(s_access_mod, AutoPropAccessMod):
-#             self.s_access_mod = s_access_mod
-#         elif isinstance(s_access_mod, int):
-#             self.s_access_mod = AutoPropAccessMod(s_access_mod)
-#         else:
-#             self.s_access_mod = AutoPropAccessMod(
-#                 self.__parse_access_str_int(s_access_mod))
-
-#         if self.g_access_mod < self.access_mod:
-#             warn("Invalid getter access level. Getter level can't be higher than property's", SyntaxWarning)
-#             self.g_access_mod = default
-
-#         if self.s_access_mod < self.access_mod:
-#             warn("Invalid setter access level. Setter level can't be higher than property's", SyntaxWarning)
-#             self.s_access_mod = default
-
-#         if name is not None:
-#             self._varname = "__" + name[0].lower() + name[1:]
-
-#             self._prop_name = name
-#         else:
-#             (_, _, _, text) = traceback.extract_stack()[-2]
-
-#             name = cast(str, text[:text.find('=')].strip())
-
-#             self._varname = "__" + name[0].lower() + name[1:]
-
-#             self._prop_name = name
-
-#         tmp1: AutopropGetter = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod)
-#         tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod, func.__annotations__.values().__iter__().__next__())
-
-#         self.getter = PropMethodAccessController[T](self.g_access_mod)(tmp1)
-#         self.setter = PropMethodAccessController[NoneType](self.s_access_mod)(FieldValidator(self._varname, getattr(self, "__orig_class__").__args__[0])(tmp2))
-
-#     def __call__(
-#         self,
-#         func: Callable[..., Any]
-#         ) -> "AutoPropertyVar[T]":
+            # If instance is not exist then return class type
+            if instance is None:
+                return self #type: ignore
+            else:
+                raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
         
-#         self._varname = "__" + func.__name__[0].lower() + func.__name__[1:]
-
-#         self._prop_name = func.__name__
-        
-#         tmp1: AutopropGetter[T] = AutopropGetter[T](self._prop_name, self._varname, self.g_access_mod)
-#         tmp2: AutopropSetter = AutopropSetter(self._prop_name, self._varname, self.s_access_mod)
-
-#         self.getter = PropMethodAccessController[T](self.g_access_mod)(tmp1)
-#         self.setter = PropMethodAccessController[NoneType](self.s_access_mod)(FieldValidator(self._varname, getattr(self, "__orig_class__").__args__[0])(tmp2))
-        
-#         return self
-
-#     def __set__(self, instance, obj):
-#         self.setter(instance, obj)
-
-#     def __get__(self, instance, owner=None) -> T:
-#         return self.getter(instance)
-
-#     def __parse_access_str_int(self, access: str):
-#         match access:
-#             case "public":
-#                 return 0
-#             case "protected":
-#                 return 1
-#             case "private":
-#                 return 2
-#             case _:
-#                 raise AccessModNotRecognized(access, (AutoPropAccessMod))
-
-#     def _get_docstring(self, func: Callable, attr_type):
-
-#         try:
-#             assert self.docstr is not None
-#             return self.docstr
-#         except AssertionError:
-#             try:
-#                 assert func.__doc__ is not None
-#                 return func.__doc__
-#             except AssertionError:
-#                 return f"Auto property. Name: {func.__name__}, type: {attr_type}, returns: {func.__annotations__.get('return')}"
