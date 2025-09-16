@@ -7,6 +7,6 @@ class AnnotationNotFoundError(Exception):
     ...
 
 class AnnotationOverlapError(Exception):
-    def __init__(self, msg="Annotation in class and in property are not the same"):
+    def __init__(self, msg="Provided annotations are not the same."):
         super().__init__(msg)
 

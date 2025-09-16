@@ -1,12 +1,11 @@
 from functools import wraps
 import inspect
 from types import NoneType, UnionType
-from typing import Callable, Iterable
-from line_profiler import profile
+from typing import Any, Callable, Iterable
 from pydantic import ConfigDict, validate_call
 
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
-from autoproperty.exceptions.Exceptions import AnnotationNotFoundError
+from autoproperty.exceptions.Exceptions import AnnotationNotFoundError, AnnotationOverlapError
 from autoproperty.interfaces.autoproperty_methods import IAutopropSetter
 
 
@@ -27,7 +26,7 @@ class FieldValidator:
     def __init__(
         self,
         field_name: str,
-        annotation_type: NoneType | UnionType | type | None = None
+        found_annotations: list,
     ) -> None:
         
         """
@@ -36,72 +35,45 @@ class FieldValidator:
         :param NoneType | UnionType | type | None annotation_type: Type for check typing.
         """
 
-        self._field_name = field_name if isinstance(field_name, Iterable) else (field_name)
-
-        if isinstance(annotation_type, (NoneType, UnionType, type)):
-            self._annotation_type = annotation_type
-        else:
-            raise TypeError("Annotation type is invalid")
-
-    @staticmethod
-    def get_class_annotation(clsobj: object, field_name: str) -> type | UnionType | None:
-       
-        # Taking annotations from class
-        annotations = inspect.get_annotations(clsobj.__class__)
+        self._field_name = field_name
         
-        if len(annotations) > 0 and annotations.get(field_name) is not None:
-            return annotations[field_name]
+        self._annotation_type = self._check_and_get_annotation(found_annotations)
+        
+    def _check_and_get_annotation(self, found_annotations: list):
+        if self.all_equal(found_annotations):
+            if len(found_annotations) > 0:
+                return found_annotations[0]
+            else:
+                raise AnnotationNotFoundError("Annotation type is not provided")
         else:
-            return None
+            raise AnnotationOverlapError("Annotations are not the same")
+
+    def all_equal(self, iterable: Iterable):
+        iterator = iter(iterable)
+        try:
+            first = next(iterator)
+        except StopIteration:
+            return True
+        return all(item == first for item in iterator)
+
+    def __call__(self, func):
 
         
-    def _get_param_annotation(self) -> type | UnionType | None:
-        
-        if self._annotation_type is not None:
-            return self._annotation_type
-        else:
-            return None
+        # Tring to take annotation from any of three places
+        # First trying to take from parameters
+        attr_annotation = self._annotation_type
 
+        # Adding found annotation to function's annotation
+        func.__call__.__annotations__["value"] = attr_annotation
 
-    @staticmethod
-    def get_func_annotation(func: Callable, field_name: str):
-
-        # Checking if the passed function is a setter for autoprop
-        if isinstance(func, IAutopropSetter):
+        # Decorating function by pydantic validator with parsing turned off
             
-            # If value type is written in the field __value_type__ then returning it
-            if func.__value_type__ is not None:
-                return func.__value_type__
-            else:
-                return None
+        decorated_func = validate_call(config=ConfigDict(strict=True))(func.__call__)
+                
 
-        else:
-            # Taking annotations from callable
-            annotations = inspect.get_annotations(func)
+        # Calling and returning decorated function's data
+        # return decorated_func(cls, value)
 
-            # Checking if annotations are not None
-            if len(annotations) > 0 and annotations.get(field_name) is not None:
-                return annotations[field_name]
-            else:
-                return None
+        #wrapper.__wrapped__ = func
 
-
-    def __call__(self, func: AutopropBase):
-
-        @wraps(func)
-        def wrapper(cls, value):
-
-            # Tring to take annotation from any of three places
-            # First trying to take from parameters
-            attr_annotation = self._get_param_annotation()
-
-            # Adding found annotation to function's annotation
-            func.__call__.__annotations__["value"] = attr_annotation
-
-            # Decorating function by pydantic validator with parsing turned off
-            decorated_func = validate_call(config=ConfigDict(strict=True))(func.__call__)
-
-            # Calling and returning decorated function's data
-            return decorated_func(cls, value)
-
-        return wrapper
+        return decorated_func

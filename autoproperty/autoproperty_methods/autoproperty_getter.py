@@ -1,10 +1,8 @@
 from typing import Generic, TypeVar
 
-from line_profiler import profile
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
 from autoproperty.interfaces.autoproperty_methods import IAutoProperty
 from autoproperty.prop_settings import AutoPropType
-from numba import jit
 
 T = TypeVar('T')
 

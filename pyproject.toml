@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 Metadata-Version = 1.1
 name = "autoproperty"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
  { name="Provonsal", email="alecsw86@gmail.com" },
 ]

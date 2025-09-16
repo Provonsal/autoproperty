@@ -14,5 +14,8 @@ class AutopropSetter(AutopropBase):
         
         self.__value_type__ = value_type
         
-    def __set__(self, cls, value):
+    def __call__(self,  cls: object, value: Any):
+        self.__set__(cls, value)
+        
+    def __set__(self, cls: object, value: Any):
         setattr(cls, self.__prop_attr_name__, value)

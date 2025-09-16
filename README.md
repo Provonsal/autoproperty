@@ -57,7 +57,6 @@ obj = Exmpl()
 obj.some_prop = 42
 ```
 
----
 
 ### Annotations
 
@@ -72,7 +71,6 @@ class Exmpl:
                           # ^ three
 ```
 
----
 
 ## Example
 

@@ -1,8 +1,6 @@
-import inspect
-from types import FrameType, UnionType
+from types import UnionType
 from typing import Any, Callable, Generic, TypeVar, cast, get_type_hints
 
-from line_profiler import profile
 
 from autoproperty.autoproperty_methods.autoproperty_getter import AutopropGetter
 from autoproperty.exceptions.Exceptions import AnnotationOverlapError
@@ -22,7 +20,8 @@ class AutoProperty(Generic[T]):
                  'value', 
                  '__doc__', 
                  '_field_name', 
-                 'prop_name')
+                 'prop_name',
+                 '_found_annotations')
 
     annotation_type: type | UnionType | None
     setter: IAutopropSetter | None
@@ -32,6 +31,7 @@ class AutoProperty(Generic[T]):
     _field_name: str | None
     prop_name: str | None
     validate_fields: bool = True
+    _found_annotations: list
 
     def __init__(
         self,
@@ -44,6 +44,10 @@ class AutoProperty(Generic[T]):
         self.setter = None
         self.getter = None
         self._field_name = None
+        self._found_annotations = []
+
+        if self.annotation_type is not None:
+            self._found_annotations.append(self.annotation_type)
 
         if func is not None:
             self._setup_from_func(func)
@@ -55,24 +59,19 @@ class AutoProperty(Generic[T]):
         self.prop_name = func.__name__
         self._field_name = f"_{func.__name__}"
 
-        # Checking if annotation type 
-        # is not passed in arguments
-        if self.annotation_type is None:
-            try:
-                # Extracting annotations
-                hints = get_type_hints(func)
-                
-                # Caching annotation for return
-                return_hint = hints.get('return')
-                
-                # If found then assigning annotation to field
-                if return_hint is not None:
-                    self.annotation_type = return_hint
-            except Exception:
-                pass
-
-        # Starting setting up setter and getter
-        self._setup_getter_setter()
+        # Extracting annotations
+        hints = get_type_hints(func)
+        
+        # Caching annotation for return
+        return_hint = hints.get('return')
+        
+        # If found then assigning annotation to field
+        if return_hint is not None:
+            self._found_annotations.append(return_hint)
+            
+        # Starting setting up getter, setter we will set later
+        # after we get all annotations from all places
+        self._setup_getter(self.prop_name, self._field_name)
 
     def _setup_getter(self, prop_name: str, field_name: str):
         
@@ -90,7 +89,7 @@ class AutoProperty(Generic[T]):
         
         # If need to valdiate then wrapping setter with field validator 
         if self.validate_fields:
-            setter_with_validator = FieldValidator(_field_name, annotation_type)(setter)
+            setter_with_validator = FieldValidator(_field_name, self._found_annotations)(setter)
             self.setter = cast(AutopropSetter, setter_with_validator)
         else:
             # else just assigning setter
@@ -124,30 +123,25 @@ class AutoProperty(Generic[T]):
             # Getting annotations from owner class
             hints = get_type_hints(owner)
             
-            # If no annotation provided in parameters of decorator
-            # then trying to get annotations from the owner class now
-            if self.annotation_type is None:
+            # Cache annotation
+            annotation = hints.get(self._field_name)
                 
-                self.annotation_type = hints.get(name)
+            # If annotation has found
+            if annotation is not None:
                 
-                if self.annotation_type is None:
-                    raise TypeError("Annotation for validation are not provided.")    
-                else:
-                    self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
-                    return
-                    
-            # If annotation is provided after all then compare with existing in the
-            # owner class and if they are different then raise an error
-            elif self.annotation_type is not hints.get(name):
-                raise AnnotationOverlapError("Type annotation is different")
-            
-        else:
-            if self.setter is None and self.getter is None:
-                self._setup_getter_setter()
-            elif self.setter is None:
+                # Add it to found ones
+                self._found_annotations.append(annotation)
+                
+                # Setup the setter again
                 self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
-            elif self.getter is None:
-                self._setup_getter(self.prop_name, self._field_name)
+            
+        
+        if self.setter is None and self.getter is None:
+            self._setup_getter_setter()
+        elif self.setter is None:
+            self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
+        elif self.getter is None:
+            self._setup_getter(self.prop_name, self._field_name)
 
     def __call__(
         self,
@@ -161,9 +155,10 @@ class AutoProperty(Generic[T]):
     def __set__(self, instance, obj):
         if self.setter is None:
             raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
-        self.setter.__set__(instance, obj)
+        
+        self.setter(instance, obj)
 
-    def __get__(self, instance, owner=None):
+    def __get__(self, instance, owner=None) -> T:
         
         try:
             return self.getter.__get__(instance, owner=owner) # type: ignore

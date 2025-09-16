@@ -1,11 +1,8 @@
-import time
-
 import line_profiler
 from autoproperty import AutoProperty
 import timeit
-from dis import dis
 
-AutoProperty.validate_fields = False
+AutoProperty.validate_fields = True
 
 def time_comparing():
     
