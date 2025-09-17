@@ -1,8 +1,9 @@
 import line_profiler
 from autoproperty import AutoProperty
+from autoproperty import LightAutoProperty
 import timeit
 
-AutoProperty.validate_fields = True
+AutoProperty.validate_fields = False
 
 def time_comparing():
     
@@ -29,8 +30,10 @@ def time_comparing():
         
 
         @AutoProperty
-        def X(self) -> int:
-            ...
+        def X(self) -> int: ...
+
+        @LightAutoProperty
+        def G(self) -> int: ...
 
         @property
         def Y(self):
@@ -49,83 +52,46 @@ def time_comparing():
 
     obj = A(3,3,3)
 
-    @line_profiler.profile
-    def func1():
+    #@line_profiler.profile
+    def autoproperty_get():
         obj.X
 
-    @line_profiler.profile
-    def func2():
+    #@line_profiler.profile
+    def light_autoproperty_get():
+        obj.G
+        
+    
+    def basic_property_get():
         obj.Y
-
-    @line_profiler.profile
-    def func3():
+        
+    #@line_profiler.profile
+    def autoproperty_set():
         obj.X = 2
 
-    @line_profiler.profile
-    def func4():
+    #@line_profiler.profile
+    def light_autoproperty_set():
+        obj.G = 2
+        
+    def basic_property_set():
         obj.Y = 2
 
-    execution_time_autoproperty = timeit.timeit(func1, number=100000)
-    execution_time_property = timeit.timeit(func2, number=100000)
-    execution_time_autoproperty_write = timeit.timeit(func3, number=10000)
-    execution_time_property_write = timeit.timeit(func4, number=10000)
-    execution_time_custom_descriptor = timeit.timeit(lambda: obj.Z, number=10000)
+    execution_time_autoproperty_write   = timeit.timeit(autoproperty_set, number=1_000_000_0)
+    execution_time_autoproperty         = timeit.timeit(autoproperty_get, number=1_000_000_0)
+    execution_time_light_property_write = timeit.timeit(light_autoproperty_set, number=1_000_000_0)
+    execution_time_light_property       = timeit.timeit(light_autoproperty_get, number=1_000_000_0)
+    execution_time_basic_property_write = timeit.timeit(basic_property_set, number=1_000_000_0)
+    execution_time_basic_property       = timeit.timeit(basic_property_get, number=1_000_000_0)
 
     print("autoproperty time: ", execution_time_autoproperty)
-    print("property time: ", execution_time_property)
     print("autoproperty setter time: ", execution_time_autoproperty_write)
-    print("property setter time: ", execution_time_property_write)
-    print("descriptor time: ", execution_time_custom_descriptor)
-    print("diff 1", execution_time_autoproperty/execution_time_property)
-    print("diff 2", execution_time_autoproperty_write/execution_time_property_write)
+    print("light autoproperty time: ", execution_time_light_property)
+    print("light autoproperty setter time: ", execution_time_light_property_write)
+    print("basic property", execution_time_basic_property)
+    print("basic property write", execution_time_basic_property_write)
+    print("diff 1", execution_time_autoproperty/execution_time_light_property)
+    print("diff 2", execution_time_autoproperty_write/execution_time_light_property_write)
 
-#     code = """
-# class A():
 
-#     __y: int
-
-#     @property
-#     def Y(self):
-#         return self.__y
-    
-#     @Y.setter
-#     def Y(self, v):
-#         self.__y = v
-    
-#     def __init__(self, y) -> None:
-#         self.Y = y
-
-# obj = A(3)
-# obj.Y
-#     """
-
-#     code2 = """
-# class A():
-
-#     @AutoProperty[int](annotationType=int)
-#     def X(self):
-#         ...
-    
-#     def __init__(self, x) -> None:
-#         self.X = x
-
-# obj = A(3)
-# print(1)
-# print(1)
-# print(1)
-# print(1)
-# print(1)
-# obj.X
-# """
-    
-    #dis(lambda: obj.X)
-
-    # import cProfile
-
-    # cProfile.Profile(timer=time.perf_counter_ns, timeunit=0.000001).run(code)
-    # cProfile.Profile(timer=time.perf_counter_ns,timeunit=0.000001).run(code2)
-    # cProfile.run(code)
-    # cProfile.run(code2)
 
 time_comparing()
 

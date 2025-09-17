@@ -1,7 +1,6 @@
 from typing import Any
 from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
 from autoproperty.interfaces.autoproperty_methods import IAutoProperty
-from autoproperty.interfaces.autoproperty_methods import IAutopropSetter
 from autoproperty.prop_settings import AutoPropType
 
 

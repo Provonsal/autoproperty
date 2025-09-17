@@ -1,12 +1,7 @@
-from functools import wraps
-import inspect
-from types import NoneType, UnionType
-from typing import Any, Callable, Iterable
+from typing import Iterable
 from pydantic import ConfigDict, validate_call
 
-from autoproperty.autoproperty_methods.autoproperty_base import AutopropBase
 from autoproperty.exceptions.Exceptions import AnnotationNotFoundError, AnnotationOverlapError
-from autoproperty.interfaces.autoproperty_methods import IAutopropSetter
 
 
 class FieldValidator:
@@ -69,11 +64,5 @@ class FieldValidator:
         # Decorating function by pydantic validator with parsing turned off
             
         decorated_func = validate_call(config=ConfigDict(strict=True))(func.__call__)
-                
-
-        # Calling and returning decorated function's data
-        # return decorated_func(cls, value)
-
-        #wrapper.__wrapped__ = func
 
         return decorated_func

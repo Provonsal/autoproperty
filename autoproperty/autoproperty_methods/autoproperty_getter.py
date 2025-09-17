@@ -14,6 +14,8 @@ class AutopropGetter(Generic[T], AutopropBase):
         super().__init__(prop_name, attr_name, belong, AutoPropType.Getter)
         return
    
+    def __call__(self,  cls: object, owner=None):
+        self.__get__(cls)
     
     def __get__(self, instance, owner=None):
         return getattr(instance, self.__prop_attr_name__, None)

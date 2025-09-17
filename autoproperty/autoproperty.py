@@ -1,9 +1,8 @@
 from types import UnionType
-from typing import Any, Callable, Generic, TypeVar, cast, get_type_hints
+from typing import Any, Callable, Self, TypeVar, cast, get_type_hints
 
 
 from autoproperty.autoproperty_methods.autoproperty_getter import AutopropGetter
-from autoproperty.exceptions.Exceptions import AnnotationOverlapError
 from autoproperty.fieldvalidator import FieldValidator
 from autoproperty.autoproperty_methods import AutopropSetter
 from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutopropSetter
@@ -12,12 +11,11 @@ from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutop
 T = TypeVar('T')
 F = TypeVar('F', bound=Callable[..., Any])
 
-class AutoProperty(Generic[T]):
+class AutoProperty():
 
     __slots__ = ('annotation_type', 
-                 'setter', 'getter', 
-                 'bound_class_qualname', 
-                 'value', 
+                 'setter', 
+                 'getter', 
                  '__doc__', 
                  '_field_name', 
                  'prop_name',
@@ -27,7 +25,6 @@ class AutoProperty(Generic[T]):
     setter: IAutopropSetter | None
     getter: IAutopropGetter | None
     bound_class_qualname: str
-    value: Any
     _field_name: str | None
     prop_name: str | None
     validate_fields: bool = True
@@ -52,7 +49,7 @@ class AutoProperty(Generic[T]):
         if func is not None:
             self._setup_from_func(func)
 
-    def _setup_from_func(self, func: Callable[..., Any]):
+    def _setup_from_func(self, func: Callable[..., Any]) -> None:
 
         # Extracting function name and creating a 
         # name for field in the instance
@@ -73,14 +70,14 @@ class AutoProperty(Generic[T]):
         # after we get all annotations from all places
         self._setup_getter(self.prop_name, self._field_name)
 
-    def _setup_getter(self, prop_name: str, field_name: str):
+    def _setup_getter(self, prop_name: str, field_name: str) -> None:
         
         """Method for creating getter of autoproperty"""
         
         # Creating getter
         self.getter = AutopropGetter[T](prop_name, field_name, self)
 
-    def _setup_setter(self, prop_name, _field_name, annotation_type):
+    def _setup_setter(self, prop_name: str, _field_name: str, annotation_type: type | None) -> None:
         
         """Method for creating setter of autoproperty"""
         
@@ -95,7 +92,7 @@ class AutoProperty(Generic[T]):
             # else just assigning setter
             self.setter = setter
 
-    def _setup_getter_setter(self):
+    def _setup_getter_setter(self) -> None:
         
         """Method for setting up setter and getter of auto property."""
         
@@ -134,7 +131,6 @@ class AutoProperty(Generic[T]):
                 
                 # Setup the setter again
                 self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
-            
         
         if self.setter is None and self.getter is None:
             self._setup_getter_setter()
@@ -146,22 +142,22 @@ class AutoProperty(Generic[T]):
     def __call__(
         self,
         func: Callable[..., Any]
-        ) -> "AutoProperty[T]":
+        ) -> Self:
         
         self.__doc__ = func.__doc__
         self._setup_from_func(func)
         return self
     
-    def __set__(self, instance, obj):
+    def __set__(self, instance, obj) -> None:
         if self.setter is None:
             raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
         
         self.setter(instance, obj)
 
-    def __get__(self, instance, owner=None) -> T:
+    def __get__(self, instance, owner=None) -> Any | None:
         
         try:
-            return self.getter.__get__(instance, owner=owner) # type: ignore
+            return self.getter(instance, owner=owner)
         except AttributeError:
 
             # If instance is not exist then return class type
@@ -169,4 +165,5 @@ class AutoProperty(Generic[T]):
                 return self #type: ignore
             else:
                 raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
+        
         

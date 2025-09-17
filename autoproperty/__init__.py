@@ -1,2 +1,4 @@
 from .autoproperty import AutoProperty
-from .fieldvalidator import FieldValidator
+from .light_autoproperty import LightAutoProperty
+
+__all__ = ["AutoProperty", "LightAutoProperty"]

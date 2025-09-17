@@ -14,7 +14,7 @@ def test_annotation_overlap_one():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int](annotation_type=int)
+            @AutoProperty(annotation_type=int)
             def X(self) -> int: ...
 
             def method(self):
@@ -34,7 +34,7 @@ def test_annotation_overlap_two():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int](annotation_type=str)
+            @AutoProperty(annotation_type=str)
             def X(self) -> int: ...
 
             def method(self):
@@ -54,7 +54,7 @@ def test_annotation_overlap_three():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int](annotation_type=int)
+            @AutoProperty(annotation_type=int)
             def X(self) -> str: ...
 
             def method(self):
@@ -75,7 +75,7 @@ def test_annotation_overlap_four():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int]
+            @AutoProperty
             def X(self) -> str: ...
 
             def method(self):
@@ -96,7 +96,7 @@ def test_annotation_overlap_five():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int]
+            @AutoProperty
             def X(self) -> int: ...
 
             def method(self):
@@ -117,7 +117,7 @@ def test_annotation_overlap_six():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int](annotation_type=str)
+            @AutoProperty(annotation_type=str)
             def X(self) -> int: ...
 
             def method(self):
@@ -136,7 +136,7 @@ def test_annotation_overlap_seven():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int](annotation_type=int)
+            @AutoProperty(annotation_type=int)
             def X(self) -> str: ...
 
             def method(self):
@@ -157,7 +157,7 @@ def test_annotation_overlap_eight():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int](annotation_type=int)
+            @AutoProperty(annotation_type=int)
             def X(self): ...
 
             def method(self):
@@ -178,7 +178,7 @@ def test_annotation_overlap_nine():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int](annotation_type=str)
+            @AutoProperty(annotation_type=str)
             def X(self): ...
 
             def method(self):
@@ -199,7 +199,7 @@ def test_annotation_right():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int](annotation_type=int)
+            @AutoProperty(annotation_type=int)
             def X(self) -> int: ...
 
             def method(self):
@@ -218,7 +218,7 @@ def test_with_no_annotation():
                 self.X = 12
                 print(self.X)
                 
-            @AutoProperty[int]
+            @AutoProperty
             def X(self): ...
 
             def method(self):
