@@ -27,7 +27,6 @@ def time_comparing():
     class A():
 
         __y: int
-        
 
         @AutoProperty
         def X(self) -> int: ...

@@ -227,3 +227,52 @@ def test_with_no_annotation():
         assert False
     except AnnotationNotFoundError:
         assert True
+        
+        
+def test_with_generic_without_validation():
+    # fourth combination
+    
+    AutoProperty.validate_fields = False
+    
+    try:     
+        class CL12:
+            
+            def __init__(self):
+                self.X = 12
+                print(self.X)
+                
+            @AutoProperty[int]
+            def X(self): ...
+
+            def method(self):
+                self.X
+            
+        assert True
+    except AnnotationNotFoundError:
+        assert False
+    except:
+        assert False
+    finally:
+        AutoProperty.validate_fields = True
+        
+def test_with_generic_with_validation():
+    # fourth combination
+    
+    try:     
+        class CL13:
+            
+            _X: int
+            
+            def __init__(self):
+                self.X = 12
+                print(self.X)
+                
+            @AutoProperty[int]
+            def X(self): ...
+
+            def method(self):
+                self.X
+            
+        assert True
+    except AnnotationNotFoundError:
+        assert False

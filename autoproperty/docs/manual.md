@@ -1,4 +1,4 @@
-# Basic usage example
+# Base info
 
 ## Table of content
 
@@ -7,6 +7,7 @@
     - [Annotation overlap](#annotation-overlap)
 - [Validation](#validation)
     - [Turn off validation](#turn-off-validation) 
+- [Generic & type hints](#generic--type-hints)
 
 ## Example
 
@@ -121,4 +122,39 @@ class Book:
     def title(self) -> str: ...
 
 book = Book() # no error
+```
+
+## Generic & type hints
+
+Generic can be setted to prove readable and get type highlight. Generic is optional, type hints will work in two options:
+1. If you place type in return annotation:
+
+```python
+@AutoProperty
+def title(self) -> str: ...
+```
+
+2. If you use generic (but it is only annotation, not an actual type, it will not counted as a type for validation)
+
+```python
+@AutoProperty[str]
+def title(self): ...
+```
+
+Example of this annotation error error:
+
+```python
+from autoproperty import AutoProperty
+
+
+class Book:
+
+    def __init__(self, title):
+        self.title = title
+
+    @AutoProperty[str]
+    def title(self): ...
+
+# will raise AnnotationNotFoundError right after class 
+# constructed itself in runtime
 ```

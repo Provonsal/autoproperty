@@ -1,5 +1,5 @@
 from types import UnionType
-from typing import Any, Callable, Self, TypeVar, cast, get_type_hints
+from typing import Any, Callable, Generic, Self, TypeVar, cast, get_type_hints
 
 
 from autoproperty.autoproperty_methods.autoproperty_getter import AutopropGetter
@@ -11,7 +11,7 @@ from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutop
 T = TypeVar('T')
 F = TypeVar('F', bound=Callable[..., Any])
 
-class AutoProperty():
+class AutoProperty(Generic[T]):
 
     __slots__ = ('annotation_type', 
                  'setter', 
@@ -154,7 +154,7 @@ class AutoProperty():
         
         self.setter(instance, obj)
 
-    def __get__(self, instance, owner=None) -> Any | None:
+    def __get__(self, instance, owner=None) -> T | None:
         
         try:
             return self.getter(instance, owner=owner)
