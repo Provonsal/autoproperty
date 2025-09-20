@@ -18,7 +18,8 @@ class AutoProperty(Generic[T]):
                  '__doc__', 
                  '_field_name', 
                  'prop_name',
-                 '_found_annotations')
+                 '_found_annotations',
+                 'cache')
 
     annotation_type: type | UnionType | None
     setter: IAutopropSetter | None
@@ -28,11 +29,13 @@ class AutoProperty(Generic[T]):
     prop_name: str | None
     validate_fields: bool = True
     _found_annotations: list
+    cache: bool
     
     def __init__(
         self,
         func: Callable[..., T] | None = None,
         annotation_type: type | UnionType | None = None,
+        cache: bool = False
     ) -> None: ...
     
     def _setup_from_func(
@@ -45,6 +48,8 @@ class AutoProperty(Generic[T]):
         prop_name: str, 
         field_name: str
     ) -> None: ...
+    
+    def _get_debug_cache_info(self) -> tuple: ...
     
     def _setup_setter(
         self, 

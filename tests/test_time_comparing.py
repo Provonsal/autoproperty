@@ -28,7 +28,7 @@ def time_comparing():
 
         __y: int
 
-        @AutoProperty
+        @AutoProperty(cache=True)
         def X(self) -> int: ...
 
         @LightAutoProperty
@@ -74,12 +74,12 @@ def time_comparing():
     def basic_property_set():
         obj.Y = 2
 
-    execution_time_autoproperty_write   = timeit.timeit(autoproperty_set, number=1_000_000_0)
-    execution_time_autoproperty         = timeit.timeit(autoproperty_get, number=1_000_000_0)
-    execution_time_light_property_write = timeit.timeit(light_autoproperty_set, number=1_000_000_0)
-    execution_time_light_property       = timeit.timeit(light_autoproperty_get, number=1_000_000_0)
-    execution_time_basic_property_write = timeit.timeit(basic_property_set, number=1_000_000_0)
-    execution_time_basic_property       = timeit.timeit(basic_property_get, number=1_000_000_0)
+    execution_time_autoproperty_write   = timeit.timeit(autoproperty_set, number=1_000_000)
+    execution_time_autoproperty         = timeit.timeit(autoproperty_get, number=1_000_000)
+    execution_time_light_property_write = timeit.timeit(light_autoproperty_set, number=1_000_000)
+    execution_time_light_property       = timeit.timeit(light_autoproperty_get, number=1_000_000)
+    execution_time_basic_property_write = timeit.timeit(basic_property_set, number=1_000_000)
+    execution_time_basic_property       = timeit.timeit(basic_property_get, number=1_000_000)
 
     print("autoproperty time: ", execution_time_autoproperty)
     print("autoproperty setter time: ", execution_time_autoproperty_write)
@@ -89,10 +89,15 @@ def time_comparing():
     print("basic property write", execution_time_basic_property_write)
     print("diff 1", execution_time_autoproperty/execution_time_light_property)
     print("diff 2", execution_time_autoproperty_write/execution_time_light_property_write)
+    #print(A.X._get_debug_cache_info())
 
 
 
 time_comparing()
+
+
+
+
 
 """
 1 try

@@ -1,3 +1,4 @@
+from functools import lru_cache
 from types import UnionType
 from typing import Any, Callable, Generic, Self, TypeVar, cast, get_type_hints
 
@@ -19,7 +20,8 @@ class AutoProperty(Generic[T]):
                  '__doc__', 
                  '_field_name', 
                  'prop_name',
-                 '_found_annotations')
+                 '_found_annotations',
+                 'cache')
 
     annotation_type: type | UnionType | None
     setter: IAutopropSetter | None
@@ -29,11 +31,13 @@ class AutoProperty(Generic[T]):
     prop_name: str | None
     validate_fields: bool = True
     _found_annotations: list
+    cache: bool
 
     def __init__(
         self,
         func: Callable[..., Any] | None = None,
         annotation_type: type | UnionType | None = None,
+        cache: bool = False
     ):
         
         self.prop_name = None
@@ -42,12 +46,18 @@ class AutoProperty(Generic[T]):
         self.getter = None
         self._field_name = None
         self._found_annotations = []
+        self.cache = cache
 
         if self.annotation_type is not None:
             self._found_annotations.append(self.annotation_type)
 
         if func is not None:
             self._setup_from_func(func)
+
+    def _get_debug_cache_info(self):
+        if self.cache:
+            if self.getter is not None:
+                return self.getter.cache_info()
 
     def _setup_from_func(self, func: Callable[..., Any]) -> None:
 
@@ -75,7 +85,14 @@ class AutoProperty(Generic[T]):
         """Method for creating getter of autoproperty"""
         
         # Creating getter
-        self.getter = AutopropGetter[T](prop_name, field_name, self)
+        getter = AutopropGetter[T](prop_name, field_name, self)
+        
+        # If need to cache then wrapping getter with cache decorator
+        if self.cache:
+            decorated_getter = lru_cache()(getter)
+            self.getter = decorated_getter
+        else:
+            self.getter = getter
 
     def _setup_setter(self, prop_name: str, _field_name: str, annotation_type: type | None) -> None:
         
@@ -156,14 +173,13 @@ class AutoProperty(Generic[T]):
 
     def __get__(self, instance, owner=None) -> T | None:
         
+        # If instance is not exist then return class type
+        if instance is None:
+            return self
+        
         try:
             return self.getter(instance, owner=owner)
-        except AttributeError:
-
-            # If instance is not exist then return class type
-            if instance is None:
-                return self #type: ignore
-            else:
-                raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
+        except:
+            raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
         
         
