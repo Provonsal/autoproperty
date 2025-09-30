@@ -55,12 +55,27 @@ class AutoProperty(Generic[T]):
             self._setup_from_func(func)
 
     def _get_debug_cache_info(self):
+        """
+        Retrieves debug cache information if the property has caching enabled.
+
+        Returns:
+            The cache info of the getter function if caching is enabled.
+        """
         if self.cache:
             if self.getter is not None:
                 return self.getter.cache_info()
 
     def _setup_from_func(self, func: Callable[..., Any]) -> None:
+        """
+        Initializes the AutoProperty instance from a given function.
 
+        Extracts relevant information such as function name and annotations,
+        and sets up the property accordingly.
+
+        Args:
+            func (Callable[..., Any]): The function to initialize the property with.
+        """
+        
         # Extracting function name and creating a 
         # name for field in the instance
         self.prop_name = func.__name__
@@ -81,8 +96,13 @@ class AutoProperty(Generic[T]):
         self._setup_getter(self.prop_name, self._field_name)
 
     def _setup_getter(self, prop_name: str, field_name: str) -> None:
-        
-        """Method for creating getter of autoproperty"""
+        """
+        Creates a getter for the AutoProperty instance.
+
+        Args:
+            prop_name (str): The name of the property.
+            field_name (str): The name of the field in the instance.
+        """
         
         # Creating getter
         getter = AutopropGetter[T](prop_name, field_name, self)
@@ -95,8 +115,14 @@ class AutoProperty(Generic[T]):
             self.getter = getter
 
     def _setup_setter(self, prop_name: str, _field_name: str, annotation_type: type | None) -> None:
-        
-        """Method for creating setter of autoproperty"""
+        """
+        Creates a setter for the AutoProperty instance.
+
+        Args:
+            prop_name (str): The name of the property.
+            field_name (str): The name of the field in the instance.
+            annotation_type (type | None): The annotation type of the property.
+        """
         
         # Creating setter
         setter = AutopropSetter(prop_name, _field_name, annotation_type, self)
@@ -110,76 +136,132 @@ class AutoProperty(Generic[T]):
             self.setter = setter
 
     def _setup_getter_setter(self) -> None:
-        
-        """Method for setting up setter and getter of auto property."""
+        """
+        Sets up the getter and setter for the AutoProperty instance.
+
+        This method is called after setting up the property from a function.
+        """
         
         # Checking if got name from the function and have created the field name
         if self.prop_name is not None and self._field_name is not None:
 
             self._setup_getter(self.prop_name, self._field_name)
             self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
+
             
     
     def __set_name__(self, owner: type, name: str) -> None:
+        """
+        This method is called after `__init__` to allow the class to act as a descriptor.
         
-        """Method that calling after __init__ cause this class is also a descriptor."""
+        It sets up the property's name and field name based on the provided information.
+        If validation fields are enabled, it attempts to retrieve annotations from the owner class
+        and set up the setter function accordingly.
+
+        Args:
+            owner (type): The type of the class that owns this descriptor.
+            name (str): The name of the property within the owning class.
+
+        Returns:
+            None
+        """
         
-        # If didnt get name yet then assing new name from the owner's class field name
+        # Set up property name if not already done
         if self.prop_name is None:
-            self.prop_name = name
+            self.prop_name = name  # Store the property name for future use
         
-        # If didnt make field name then make it from the owner's class field name
+        # Determine field name from owner's class field name if not already done
         if self._field_name is None:
-            self._field_name = f"_{name}" 
+            self._field_name = f"_{name}"  # Prefix with underscore for conventional naming
 
+        # If validation fields are enabled, attempt to retrieve annotations from the owner class
         if self.validate_fields:
-
-            # Getting annotations from owner class
+            
+            # Get type hints (annotations) from the owning class
             hints = get_type_hints(owner)
             
-            # Cache annotation
+            # Cache annotation for future use
             annotation = hints.get(self._field_name)
-                
-            # If annotation has found
+            
+            # If an annotation is found, add it to the list of found annotations and set up the setter
             if annotation is not None:
-                
-                # Add it to found ones
-                self._found_annotations.append(annotation)
-                
-                # Setup the setter again
+                self._found_annotations.append(annotation)  # Add to list of found annotations
                 self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
-        
-        if self.setter is None and self.getter is None:
-            self._setup_getter_setter()
+
+        # Set up getter and/or setter functions based on current state
+        if (self.setter is None or self.getter is None):
+            self._setup_getter_setter()  # Initialize both getter and setter
         elif self.setter is None:
-            self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
+            self._setup_setter(self.prop_name, self._field_name, self.annotation_type)  # Only set up setter
         elif self.getter is None:
-            self._setup_getter(self.prop_name, self._field_name)
+            self._setup_getter(self.prop_name, self._field_name)  # Only set up getter
+
 
     def __call__(
         self,
         func: Callable[..., Any]
-        ) -> Self:
+    ) -> Self:
+        """
+        Initializes the AutoProperty instance from a function.
+
+        Args:
+            func: The function to initialize the property with. Its docstring will be used as the property's docstring.
+
+        Returns:
+            A reference to the initialized AutoProperty instance.
+        """
         
+        # Set the property's docstring
         self.__doc__ = func.__doc__
+        
+        # Initialize the property from the given function
         self._setup_from_func(func)
+        
         return self
-    
+
     def __set__(self, instance, obj) -> None:
+        """
+        Sets the value of an attribute on an instance.
+
+        Args:
+            instance: The instance that owns the attribute being set.
+            obj: The new value to be assigned to the attribute.
+
+        Raises:
+            RuntimeError: If the property was not properly initialized.
+        """
+        
+        # Check if the setter function has been provided
         if self.setter is None:
             raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
-        
+            
+        # Call the setter function with the instance and object as arguments
         self.setter(instance, obj)
 
     def __get__(self, instance, owner=None) -> T | None:
+        """
+        Gets the value of an attribute from an instance.
+
+        Args:
+            instance: The instance that owns the attribute being accessed.
+            owner: The type of the class that defines the property (default is None).
+
+        Returns:
+            The value of the attribute if the instance exists, otherwise the property itself.
+
+        Raises:
+            RuntimeError: If the property was not properly initialized.
+        """
         
-        # If instance is not exist then return class type
+        # If the instance does not exist, return the property itself
         if instance is None:
             return self
         
         try:
+            # Attempt to get the attribute value using the getter function
             return self.getter(instance, owner=owner)
         except:
+            # If an error occurs, raise a RuntimeError with a descriptive message
             raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
-        
+
         
