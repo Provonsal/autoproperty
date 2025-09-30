@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autoproperty"
-version = "0.0.5"
+version = "0.0.51"
 authors = [
  { name="Provonsal", email="alecsw86@gmail.com" },
 ]
