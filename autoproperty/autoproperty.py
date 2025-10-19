@@ -155,9 +155,7 @@ class AutoProperty(Generic[T]):
         if self.prop_name is not None and self._field_name is not None:
 
             self._setup_getter(self.prop_name, self._field_name)
-            self._setup_setter(self.prop_name, self._field_name, self.annotation_type)
-
-            
+            self._setup_setter(self.prop_name, self._field_name, self.annotation_type)  
     
     def __set_name__(self, owner: type, name: str) -> None:
         """
@@ -204,7 +202,6 @@ class AutoProperty(Generic[T]):
             self._setup_setter(self.prop_name, self._field_name, self.annotation_type)  # Only set up setter
         elif self.getter is None:
             self._setup_getter(self.prop_name, self._field_name)  # Only set up getter
-
 
     def __call__(
         self,
