@@ -1,12 +1,15 @@
 from functools import lru_cache
+from time import time
 from types import UnionType
 from typing import Any, Callable, Generic, Self, TypeVar, cast, get_type_hints
 
 
 from autoproperty.autoproperty_methods.autoproperty_getter import AutopropGetter
+from autoproperty.events.event import Event
 from autoproperty.fieldvalidator import FieldValidator
 from autoproperty.autoproperty_methods import AutopropSetter
 from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutopropSetter
+from autoproperty.interfaces.events import IEvent
 
 
 T = TypeVar('T')
@@ -24,6 +27,7 @@ class AutoProperty(Generic[T]):
                  'cache',
                  'operation_event')
 
+    # fields annotation
     annotation_type: type | UnionType | None
     setter: IAutopropSetter | None
     getter: IAutopropGetter | None
@@ -31,6 +35,10 @@ class AutoProperty(Generic[T]):
     prop_name: str | None
     _found_annotations: list
     cache: bool
+    operation_event: IEvent | None
+    
+    # static fields
+    validate_fields: bool = True
 
     def __init__(
         self,
@@ -47,6 +55,7 @@ class AutoProperty(Generic[T]):
         self._field_name = None
         self._found_annotations = []
         self.cache = cache
+        self.operation_event = Event() if events else None
 
         if self.annotation_type is not None:
             self._found_annotations.append(self.annotation_type)
