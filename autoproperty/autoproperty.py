@@ -123,7 +123,7 @@ class AutoProperty(Generic[T]):
         else:
             self.getter = getter
 
-    def _setup_setter(self, prop_name: str, _field_name: str, annotation_type: type | None) -> None:
+    def _setup_setter(self, prop_name: str, _field_name: str, annotation_type: UnionType | type | None) -> None:
         """
         Creates a setter for the AutoProperty instance.
 
@@ -228,7 +228,7 @@ class AutoProperty(Generic[T]):
         
         return self
 
-    def __set__(self, instance, obj) -> None:
+    def __set__(self, instance, obj: object) -> None:
         """
         Sets the value of an attribute on an instance.
 
