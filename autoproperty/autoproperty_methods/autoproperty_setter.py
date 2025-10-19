@@ -6,7 +6,13 @@ from autoproperty.prop_settings import AutoPropType
 
 class AutopropSetter(AutopropBase):
 
-    __slots__ = ('__auto_prop__', '__prop_attr_name__', '__method_type__', '__prop_name__', '__value_type__')
+    __slots__ = (
+        '__auto_prop__', 
+        '__prop_attr_name__', 
+        '__method_type__', 
+        '__prop_name__', 
+        '__value_type__'
+    )
 
     def __init__(self, prop_name: str, attr_name: str, value_type: Any, belong: IAutoProperty):
         super().__init__(prop_name, attr_name, belong, AutoPropType.Setter)
