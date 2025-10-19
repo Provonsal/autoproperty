@@ -72,7 +72,7 @@ class AutoProperty(Generic[T]):
         """
         if self.cache:
             if self.getter is not None:
-                return self.getter.cache_info()
+                return self.getter.cache_info() # pyright: ignore[reportAttributeAccessIssue]
 
     def _setup_from_func(self, func: Callable[..., Any]) -> None:
         """
@@ -119,7 +119,7 @@ class AutoProperty(Generic[T]):
         # If need to cache then wrapping getter with cache decorator
         if self.cache:
             decorated_getter = lru_cache()(getter)
-            self.getter = decorated_getter
+            self.getter = decorated_getter # pyright: ignore[reportAttributeAccessIssue]
         else:
             self.getter = getter
 
@@ -273,7 +273,7 @@ class AutoProperty(Generic[T]):
         
         # If the instance does not exist, return the property itself
         if instance is None:
-            return self
+            return self # pyright: ignore[reportReturnType]
         
         try:
             # Attempt to get the attribute value using the getter function
