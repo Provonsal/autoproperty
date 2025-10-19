@@ -185,7 +185,6 @@ Currently I'm planning to add these features to the lib:
 
 - The opportunity to add your own validation.
 - The opportunity to add handlers to "set" and "get" events.
-- The lightweight autoproperty class for high load projects
 - Modificators like "read-only"
 - The opportunity to add your own getter and setter using protocols
 
