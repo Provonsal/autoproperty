@@ -21,14 +21,14 @@ class AutoProperty(Generic[T]):
                  '_field_name', 
                  'prop_name',
                  '_found_annotations',
-                 'cache')
+                 'cache',
+                 'operation_event')
 
     annotation_type: type | UnionType | None
     setter: IAutopropSetter | None
     getter: IAutopropGetter | None
     _field_name: str | None
     prop_name: str | None
-    validate_fields: bool = True
     _found_annotations: list
     cache: bool
 
@@ -36,7 +36,8 @@ class AutoProperty(Generic[T]):
         self,
         func: Callable[..., Any] | None = None,
         annotation_type: type | UnionType | None = None,
-        cache: bool = False
+        cache: bool = False,
+        events: bool = False
     ):
         
         self.prop_name = None
@@ -234,6 +235,15 @@ class AutoProperty(Generic[T]):
         if self.setter is None:
             raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
             
+        if self.operation_event is not None:
+            
+            self.operation_event.trigger(
+                self.setter.__method_type__, 
+                self.prop_name, 
+                new_value=obj.__repr__(), 
+                time=time()
+            )
+            
         # Call the setter function with the instance and object as arguments
         self.setter(instance, obj)
 
@@ -258,7 +268,18 @@ class AutoProperty(Generic[T]):
         
         try:
             # Attempt to get the attribute value using the getter function
-            return self.getter(instance, owner=owner)
+            gotten_value = self.getter(instance, owner=owner) # pyright: ignore[reportOptionalCall]
+            
+            if self.operation_event is not None:
+                
+                self.operation_event.trigger(
+                    self.getter.__method_type__,  # pyright: ignore[reportOptionalMemberAccess]
+                    self.prop_name, 
+                    gotten_value, 
+                    time=time()
+                ) # pyright: ignore[reportOptionalMemberAccess]
+            
+            return gotten_value
         except:
             # If an error occurs, raise a RuntimeError with a descriptive message
             raise RuntimeError(f"AutoProperty '{self.prop_name}' was not properly initialized.")
