@@ -26,7 +26,6 @@ class AutoProperty(Generic[T]):
     annotation_type: type | UnionType | None
     setter: IAutopropSetter | None
     getter: IAutopropGetter | None
-    bound_class_qualname: str
     _field_name: str | None
     prop_name: str | None
     validate_fields: bool = True
