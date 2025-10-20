@@ -16,10 +16,10 @@ class Event:
     def __init__(self):
         self.listeners = []
 
-    def subscribe(self, listener):
+    def subscribe(self, listener: IListener):
         self.listeners.append(listener)
 
-    def unsubscribe(self, listener):
+    def unsubscribe(self, listener: IListener):
         self.listeners.remove(listener)
         
     def trigger(
