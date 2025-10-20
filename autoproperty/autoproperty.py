@@ -2,6 +2,7 @@ from functools import lru_cache
 from time import time
 from types import UnionType
 from typing import Any, Callable, Generic, Self, TypeVar, cast, get_type_hints
+from warnings import warn
 
 
 from autoproperty.autoproperty_methods.autoproperty_getter import AutopropGetter
@@ -9,7 +10,7 @@ from autoproperty.events.event import Event
 from autoproperty.fieldvalidator import FieldValidator
 from autoproperty.autoproperty_methods import AutopropSetter
 from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutopropSetter
-from autoproperty.interfaces.events import IEvent
+from autoproperty.interfaces.events import IEvent, IListener
 
 
 T = TypeVar('T')
