@@ -5,6 +5,9 @@ from autoproperty.events.filters import ListenerFilters
 from autoproperty.prop_settings import AutoPropType
 
 
+class Action(Protocol):
+    def __call__(self, context: EventContext) -> None: ...
+
 class IListener(Protocol):
     __slots__ = (
         'action',
