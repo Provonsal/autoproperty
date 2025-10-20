@@ -63,6 +63,12 @@ class AutoProperty(Generic[T]):
         if func is not None:
             self._setup_from_func(func)
 
+    def subscribe(self, listener: IListener):
+        if self.operation_event is not None:
+            self.operation_event.subscribe(listener)
+        else:
+            warn("Event system is offline. Subscriptions will no make anything.")
+
     def _get_debug_cache_info(self):
         """
         Retrieves debug cache information if the property has caching enabled.
