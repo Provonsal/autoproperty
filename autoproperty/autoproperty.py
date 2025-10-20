@@ -250,8 +250,10 @@ class AutoProperty(Generic[T]):
             
         if self.operation_event is not None:
             
+            method_type = self.setter.__wrapped__.__self__.__method_type__ if hasattr(self.setter, '__wrapped__') else self.setter.__method_type__ # pyright: ignore[reportAttributeAccessIssue]
+            
             self.operation_event.trigger(
-                self.setter.__method_type__, 
+                method_type, 
                 self.prop_name, 
                 new_value=obj.__repr__(), 
                 time=time()
