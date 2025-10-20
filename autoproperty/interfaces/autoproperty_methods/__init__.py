@@ -11,6 +11,8 @@ class IAutopropBase(Protocol):
     __method_type__: AutoPropType
     __prop_name__: str
     
+    def __init__(self, prop_name: str,  attr_name: str, belong: "IAutoProperty", prop_type: AutoPropType) -> None: ...
+    
     def __call__(self, *args, **kwds) -> Any: ...
     
 @runtime_checkable
