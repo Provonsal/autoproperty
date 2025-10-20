@@ -1,4 +1,4 @@
-from typing import Callable, NamedTuple, Protocol
+from typing import NamedTuple, Protocol
 
 from autoproperty.events.context import EventContext
 from autoproperty.events.filters import ListenerFilters
@@ -11,19 +11,21 @@ class Action(Protocol):
 class IListener(Protocol):
     __slots__ = (
         'action',
-        'filters'
+        'filters',
+        'trigger_count'
     )
     
-    action: Callable[[EventContext], None]
+    action: Action
     filters: NamedTuple
+    trigger_count: int
     
     def __init__(
         self, 
-        action: Callable[[EventContext], None],
+        action: Action,
         filters: tuple
-    ): ...
+    ) -> None: ...
     def check_filters(self, filters: tuple) -> bool: ...
-    def change_filters(self, new_filters: ListenerFilters): ...
+    def change_filters(self, new_filters: ListenerFilters) -> None: ...
     def notify(self, context: EventContext) -> None: ...
 
 class IEvent(Protocol):
@@ -33,9 +35,9 @@ class IEvent(Protocol):
     
     listeners: list[IListener]
     
-    def __init__(self): ...
-    def subscribe(self, listener) -> None: ...
-    def unsubscribe(self, listener) -> None: ...
+    def __init__(self) -> None: ...
+    def subscribe(self, listener: IListener) -> None: ...
+    def unsubscribe(self, listener: IListener) -> None: ...
     def trigger(
         self, 
         method_type: AutoPropType, 

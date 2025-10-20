@@ -2,6 +2,7 @@ from functools import lru_cache
 from time import time
 from types import UnionType
 from typing import Any, Callable, Generic, Self, TypeVar, cast, get_type_hints
+from warnings import warn
 
 
 from autoproperty.autoproperty_methods.autoproperty_getter import AutopropGetter
@@ -9,7 +10,7 @@ from autoproperty.events.event import Event
 from autoproperty.fieldvalidator import FieldValidator
 from autoproperty.autoproperty_methods import AutopropSetter
 from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutopropSetter
-from autoproperty.interfaces.events import IEvent
+from autoproperty.interfaces.events import IEvent, IListener
 
 
 T = TypeVar('T')
@@ -62,6 +63,12 @@ class AutoProperty(Generic[T]):
 
         if func is not None:
             self._setup_from_func(func)
+
+    def subscribe(self, listener: IListener):
+        if self.operation_event is not None:
+            self.operation_event.subscribe(listener)
+        else:
+            warn("Event system is offline. Subscriptions will no make anything.")
 
     def _get_debug_cache_info(self):
         """
@@ -243,8 +250,10 @@ class AutoProperty(Generic[T]):
             
         if self.operation_event is not None:
             
+            method_type = self.setter.__wrapped__.__self__.__method_type__ if hasattr(self.setter, '__wrapped__') else self.setter.__method_type__ # pyright: ignore[reportAttributeAccessIssue]
+            
             self.operation_event.trigger(
-                self.setter.__method_type__, 
+                method_type, 
                 self.prop_name, 
                 new_value=obj.__repr__(), 
                 time=time()

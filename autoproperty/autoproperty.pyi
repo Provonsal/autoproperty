@@ -2,6 +2,7 @@ from types import UnionType
 from typing import Any, Callable, Generic, Self, TypeVar, overload
 
 from autoproperty.interfaces.autoproperty_methods import IAutopropGetter, IAutopropSetter
+from autoproperty.interfaces.events import IEvent, IListener
 
 
 T = TypeVar('T')
@@ -19,24 +20,31 @@ class AutoProperty(Generic[T]):
                  '_field_name', 
                  'prop_name',
                  '_found_annotations',
-                 'cache')
+                 'cache',
+                 'operation_event')
 
+    # fields annotation
     annotation_type: type | UnionType | None
     setter: IAutopropSetter | None
     getter: IAutopropGetter | None
-    bound_class_qualname: str
     _field_name: str | None
     prop_name: str | None
-    validate_fields: bool = True
     _found_annotations: list
     cache: bool
+    operation_event: IEvent | None
+    
+    # static fields
+    validate_fields: bool = True
     
     def __init__(
         self,
         func: Callable[..., T] | None = None,
         annotation_type: type | UnionType | None = None,
-        cache: bool = False
+        cache: bool = False,
+        events: bool = False
     ) -> None: ...
+    
+    def subscribe(self, listener: IListener): ...
     
     def _setup_from_func(
         self, 
