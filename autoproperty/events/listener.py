@@ -1,7 +1,4 @@
-
-
-
-from typing import Callable, NamedTuple
+from typing import NamedTuple
 
 from autoproperty.events.context import EventContext
 from autoproperty.events.filters import ListenerFilters
@@ -11,19 +8,22 @@ class Listener:
     
     __slots__ = (
         'action',
-        'filters'
+        'filters',
+        'trigger_count'
     )
     
-    action: Callable[[EventContext], None]
+    action: Action
     filters: NamedTuple
+    trigger_count: int
     
     def __init__(
         self, 
-        action: Callable[[EventContext], None],
+        action: Action,
         filters: tuple
-    ):
+    ) -> None:
         self.action = action
         self.filters = ListenerFilters._make(filters)
+        self.trigger_count = 0
     
     def check_filters(self, filters: tuple) -> bool:
         if len(filters) == len(self.filters):
@@ -36,11 +36,12 @@ class Listener:
         else:
             return False
     
-    def change_filters(self, new_filters: ListenerFilters):
+    def change_filters(self, new_filters: ListenerFilters) -> None:
         self.filters = new_filters
     
-    def notify(self, context: EventContext):
+    def notify(self, context: EventContext) -> None:
         if self.check_filters(context.filters):
             self.action(context)
+            self.trigger_count += 1
         else:
             return None
