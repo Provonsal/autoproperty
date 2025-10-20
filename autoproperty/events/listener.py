@@ -2,6 +2,7 @@ from typing import NamedTuple
 
 from autoproperty.events.context import EventContext
 from autoproperty.events.filters import ListenerFilters
+from autoproperty.interfaces.events import Action
 
 
 class Listener:
